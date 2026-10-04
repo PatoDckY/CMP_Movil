@@ -3,304 +3,587 @@
 ## 1. Propósito
 
 La aplicación móvil SIMG-CMP utiliza una arquitectura por capas con
-MVVM como patrón principal de presentación.
+Model-View-ViewModel (MVVM) como patrón principal para la presentación.
 
-El objetivo es separar la interfaz de usuario, la lógica de presentación,
-el dominio y el acceso a datos, reduciendo el acoplamiento entre los
-componentes de la aplicación.
+El objetivo de esta arquitectura es separar claramente la interfaz de
+usuario, la lógica de presentación, el dominio y el acceso a datos, con
+el fin de reducir el acoplamiento y facilitar el mantenimiento,
+las pruebas y la evolución del sistema.
 
 La aplicación móvil no tendrá acceso directo a PostgreSQL.
 
-Toda comunicación con los datos del sistema deberá realizarse mediante
-las rutas API proporcionadas por CMP_Site.
+Toda comunicación con la información del sistema deberá realizarse
+mediante las rutas API proporcionadas por CMP_Site.
 
-## 2. Capas principales
+La arquitectura general seguirá el flujo:
 
-### Presentación
+View → ViewModel → Repository → Service → HTTP Client → API CMP_Site
 
-La capa de presentación contiene las pantallas y componentes visuales.
+## 2. Arquitectura por capas
+
+La aplicación se divide conceptualmente en cuatro capas principales:
+
+### 2.1. Presentación
+
+La capa de presentación contiene los elementos con los que interactúa
+directamente el usuario.
 
 Incluye principalmente:
 
-- screens
-- components
-- navigation
+- Screens.
+- Components.
+- Navigation.
 
-Las vistas únicamente muestran información, reciben acciones del usuario
-y delegan la lógica al ViewModel correspondiente.
+Las Views son responsables de mostrar información, recibir acciones del
+usuario y delegarlas al ViewModel correspondiente.
 
-Una View no debe realizar solicitudes HTTP directamente.
+Una View no debe realizar solicitudes HTTP directamente ni contener
+lógica relacionada con el acceso a datos.
 
-### Lógica de presentación
+Ejemplos:
+
+- CatalogScreen.
+- LoginScreen.
+- RegisterScreen.
+- MyCoursesScreen.
+- PurchaseDetailScreen.
+
+### 2.2. Lógica de presentación
 
 La lógica de presentación está implementada mediante ViewModels.
 
-Los ViewModels son responsables de:
+Los ViewModels mantienen el estado requerido por una pantalla,
+procesan eventos de usuario y solicitan operaciones mediante contratos
+Repository.
 
-- Mantener el estado requerido por las pantallas.
-- Procesar acciones del usuario.
-- Solicitar operaciones a los repositorios.
-- Gestionar estados de carga.
-- Gestionar estados de éxito, vacío y error.
-- Proporcionar a la View información preparada para mostrarse.
+También son responsables de administrar estados como:
 
-El ViewModel no debe conocer los detalles de HTTP ni los formatos de
-respuesta utilizados por CMP_Site.
+- idle.
+- loading.
+- success.
+- empty.
+- error.
 
-## 3. Dominio
+El ViewModel no debe conocer URLs, estructuras HTTP ni detalles internos
+de CMP_Site.
+
+Ejemplo:
+
+CatalogScreen utiliza useCatalogViewModel.
+
+El ViewModel utiliza CourseRepository.
+
+### 2.3. Dominio
 
 La capa de dominio contiene los modelos internos utilizados por la
 aplicación móvil.
 
-Ejemplos:
+Entre las principales entidades identificadas se encuentran:
 
-- User
-- Course
-- Purchase
-- MyCourse
-- CourseProgress
-- Notification
+- User.
+- Course.
+- Purchase.
+- PurchaseDetail.
+- MyCourse.
+- CourseProgress.
+- Notification.
 
-Los modelos representan la información utilizada dentro de la aplicación
-y son independientes del formato utilizado por la API.
+Estos modelos representan la información como la necesita la aplicación
+y no necesariamente utilizan los mismos nombres o estructuras del backend.
 
-Los modelos no deben depender de pantallas, componentes ni mecanismos HTTP.
+Por ejemplo, CMP_Site puede devolver:
 
-## 4. Capa de datos e infraestructura
+idCurso  
+tituloCurso  
+descripcion
 
-La capa de datos es responsable de comunicarse con fuentes externas.
+Mientras que el modelo móvil utiliza:
+
+id  
+title  
+description
+
+Los modelos del dominio no deben depender de pantallas, componentes,
+HTTP ni estructuras específicas del backend.
+
+### 2.4. Datos e infraestructura
+
+La capa de datos e infraestructura contiene los mecanismos necesarios
+para obtener, enviar, transformar y almacenar información.
 
 Está formada principalmente por:
 
-- Repository
-- Service
-- DTO
-- Mapper
-- HTTP Client
-- Storage
+- Repository.
+- Service.
+- DTO.
+- Mapper.
+- HTTP Client.
+- Storage.
+- Configuración de dependencias.
 
-Los Services conocen los endpoints de CMP_Site y trabajan con DTO.
+Los Services conocen las operaciones ofrecidas por CMP_Site.
 
-Los Repositories exponen modelos del dominio al resto de la aplicación y
-ocultan los detalles de la fuente de datos.
+Los Repositories abstraen el origen de los datos.
 
-Los Mappers convierten entre DTO y modelos internos.
+Los DTO representan los contratos externos.
 
-## 5. DTO
+Los Mappers transforman los DTO en modelos internos y viceversa cuando
+sea necesario.
+
+## 3. Model-View-ViewModel
+
+MVVM es el patrón principal utilizado para separar la interfaz de usuario
+de la lógica de presentación.
+
+### View
+
+La View representa las pantallas y componentes visuales.
+
+Debe:
+
+- Mostrar datos.
+- Capturar eventos del usuario.
+- Mostrar estados de carga, error o contenido.
+- Delegar operaciones al ViewModel.
+
+No debe:
+
+- Ejecutar fetch directamente.
+- Conocer endpoints.
+- Acceder directamente a PostgreSQL.
+- Convertir estructuras complejas del backend.
+
+### ViewModel
+
+El ViewModel funciona como intermediario entre la View y los contratos
+del dominio.
+
+Debe:
+
+- Mantener estado.
+- Procesar acciones de la View.
+- Consumir contratos Repository.
+- Preparar información para la interfaz.
+- Gestionar errores y estados de carga.
+
+El ViewModel debe depender de abstracciones y no directamente de
+implementaciones concretas.
+
+### Model
+
+El Model representa las entidades internas utilizadas por la aplicación.
+
+Los modelos permanecen independientes de React Native y del formato de
+transferencia utilizado por CMP_Site.
+
+## 4. DTO
 
 DTO significa Data Transfer Object.
 
-Un DTO representa exactamente la estructura utilizada para intercambiar
-información con CMP_Site.
+Los DTO representan las estructuras utilizadas para transferir
+información entre CMP_Movil y CMP_Site.
+
+Los DTO deben reflejar el contrato externo de la API.
 
 Ejemplo:
 
-Curso recibido desde CMP_Site:
+```text
+CourseDto
 
 idCurso
 tituloCurso
 descripcion
+idInstructor
+fechaInicio
+fechaFin
+```
 
-La aplicación móvil no debe depender directamente de estos nombres en sus
-pantallas o ViewModels.
+Los DTO pertenecen a la capa de datos.
 
-## 6. Mapper
+Las pantallas y ViewModels no deben depender directamente de ellos.
 
-Los Mappers convierten DTO externos en modelos internos de la aplicación.
+## 5. Mapper
+
+Los Mappers convierten datos entre las estructuras externas de CMP_Site
+y los modelos internos de CMP_Movil.
 
 Ejemplo:
 
-idCurso → id
-tituloCurso → title
-descripcion → description
+```text
+CourseDto                 Course
 
-De esta forma, un cambio en el formato del backend puede resolverse en la
-capa de datos sin modificar directamente las pantallas.
+idCurso          →        id
+tituloCurso      →        title
+descripcion      →        description
+idInstructor     →        instructorId
+```
 
-## 7. Repository Pattern
+El Mapper permite desacoplar el dominio móvil del contrato del backend.
 
-El patrón Repository se utiliza como intermediario entre los ViewModels y
-las fuentes de datos.
+El flujo habitual de una respuesta es:
 
-El ViewModel depende de una abstracción Repository y no de una
-implementación HTTP concreta.
-
-Flujo:
-
-View
-↓
-ViewModel
-↓
-Repository
-↓
-Service
-↓
-HTTP Client
-↓
+```text
 API CMP_Site
+     ↓
+    DTO
+     ↓
+  Service
+     ↓
+ Repository
+     ↓
+   Mapper
+     ↓
+   Model
+     ↓
+ ViewModel
+     ↓
+    View
+```
 
-La respuesta sigue el camino inverso.
+Cuando la aplicación necesita enviar información al backend, también
+puede utilizar un Mapper para transformar un modelo o estructura de
+entrada del dominio en un DTO de solicitud.
 
+## 6. Repository Pattern
+
+Repository es uno de los patrones de diseño utilizados formalmente por
+la aplicación.
+
+Su responsabilidad es proporcionar al ViewModel una interfaz estable
+para obtener o modificar datos sin exponer cómo se obtienen realmente.
+
+Ejemplo:
+
+```text
+CatalogScreen
+     ↓
+useCatalogViewModel
+     ↓
+CourseRepository
+     ↓
+CourseRepositoryImpl
+     ↓
+CourseService
+     ↓
 API CMP_Site
-↓
-DTO
-↓
-Service
-↓
-Repository
-↓
-Mapper
-↓
-Model
-↓
-ViewModel
-↓
-View
+```
 
-## 8. Service
+El contrato Repository pertenece a:
 
-Los Services representan las operaciones disponibles en la API.
+```text
+src/repositories/contracts
+```
+
+Las implementaciones pertenecen a:
+
+```text
+src/repositories/implementations
+```
+
+Un ViewModel debe depender del contrato Repository y no directamente del
+Service.
+
+## 7. Service
+
+Los Services representan las operaciones disponibles en la API de
+CMP_Site.
 
 Ejemplos:
 
-CourseService
-AuthService
-PurchaseService
-MyCoursesService
+- CourseService.
+- AuthService.
+- PurchaseService.
+- MyCoursesService.
 
-Un Service devuelve o recibe DTO y no debe contener lógica visual.
+Un Service puede recibir o devolver DTO.
+
+El Service conoce los endpoints requeridos, pero no contiene lógica de
+interfaz gráfica.
+
+Ejemplo conceptual:
+
+```text
+CourseService.getCourses()
+        ↓
+GET /api/cursos
+```
+
+## 8. HTTP Client
+
+El HTTP Client centraliza la comunicación HTTP común.
+
+Es responsable de tareas como:
+
+- Construcción de solicitudes.
+- Encabezados comunes.
+- Conversión de respuestas JSON.
+- Manejo general de errores HTTP.
+- Uso de la URL base de CMP_Site.
+
+Actualmente la URL base configurada es:
+
+```text
+https://cmp-site.vercel.app/api
+```
+
+Las pantallas y ViewModels no deben utilizar fetch directamente.
 
 ## 9. Dependency Injection
 
-Las dependencias se proporcionarán desde un punto de composición.
+La aplicación utiliza inyección de dependencias para reducir el
+acoplamiento entre implementaciones.
 
-Esto permite que un ViewModel trabaje con contratos en lugar de depender
-directamente de implementaciones concretas.
+Principalmente se utilizará inyección por constructor.
 
 Ejemplo:
 
-CourseRepositoryImpl recibe CourseService mediante constructor.
+```text
+CourseRepositoryImpl
+        ↓ recibe
+CourseService
+```
 
-Las dependencias compartidas se construyen desde config/dependencies.ts.
+Las dependencias compartidas se construirán desde un punto de composición
+ubicado en:
 
-## 10. Observer
+```text
+src/config/dependencies.ts
+```
 
-React utiliza un comportamiento basado en Observer mediante estado,
-hooks y Context.
+Dependency Injection se considera una técnica arquitectónica y no uno de
+los patrones de diseño adicionales definidos para el proyecto.
 
-Cuando cambia el estado gestionado por un ViewModel, la View recibe la
-actualización y vuelve a renderizar la información correspondiente.
+## 10. Observer Pattern
 
-No será necesario crear un sistema Observer paralelo mientras los mecanismos
-reactivos de React cubran esta responsabilidad.
+Observer es uno de los patrones considerados dentro de la arquitectura.
 
-## 11. Singleton
+En React Native este comportamiento se obtiene principalmente mediante:
 
-Singleton se reservará para componentes de infraestructura que deban
-compartir una única instancia durante la ejecución de la aplicación.
+- useState.
+- Hooks.
+- Context cuando sea necesario.
+- Actualización reactiva de componentes.
 
-Ejemplos previstos:
+Cuando cambia el estado administrado por un ViewModel, la View observa
+ese cambio y vuelve a renderizar la información correspondiente.
+
+No será necesario implementar un sistema Observer paralelo mientras las
+herramientas reactivas de React cubran esta responsabilidad.
+
+## 11. Singleton Pattern
+
+Singleton se utilizará únicamente cuando sea necesario compartir una
+sola instancia de infraestructura durante la ejecución de la aplicación.
+
+Se contempla su utilización para componentes como:
 
 - Cliente HTTP.
 - Configuración compartida.
-- Administrador de almacenamiento seguro.
+- Almacenamiento seguro de credenciales o tokens.
 
-No se utilizará Singleton para modelos, pantallas o ViewModels.
+No se utilizará Singleton indiscriminadamente.
 
-## 12. Proxy
+Los Models, Views y ViewModels no deben convertirse en Singleton.
 
-El patrón Proxy se utilizará principalmente para controlar solicitudes
-HTTP autenticadas.
+## 12. Proxy Pattern
 
-Un cliente HTTP autenticado podrá envolver al cliente HTTP principal para:
+Proxy se utilizará principalmente en el manejo futuro de solicitudes
+autenticadas.
 
-- Leer el token almacenado de forma segura.
-- Agregar Authorization cuando corresponda.
-- Interceptar respuestas 401.
-- Centralizar comportamiento de autenticación.
+Se contempla un componente como:
+
+```text
+AuthenticatedHttpClient
+```
+
+que envolverá al cliente HTTP principal.
+
+Este Proxy podrá ser responsable de:
+
+- Obtener el token almacenado de forma segura.
+- Agregar el encabezado Authorization.
+- Controlar respuestas 401.
+- Centralizar comportamiento relacionado con autenticación.
 
 Su implementación se realizará cuando se desarrolle el flujo de sesión
 móvil.
 
-## 13. Seguridad
+## 13. Autenticación
 
-Los secretos de infraestructura no deberán almacenarse en la aplicación.
+Los contratos de autenticación contemplan las operaciones necesarias para:
 
-Variables como:
+- Inicio de sesión.
+- Solicitud de código OTP para registro.
+- Registro de usuario.
+- Verificación de sesión.
+- Cierre de sesión.
+- Respuesta de autenticación con MFA requerido.
 
+El backend web actualmente administra la sesión mediante autenticación
+propia de CMP_Site.
+
+La adaptación necesaria para autenticación móvil y almacenamiento seguro
+del token se realizará en las actividades correspondientes al manejo de
+sesión.
+
+No se almacenarán secretos del servidor en CMP_Movil.
+
+## 14. Adquisición y pagos
+
+El dominio de adquisición contempla:
+
+- Purchase.
+- PurchaseDetail.
+- PurchaseParticipant.
+- PaymentMethod.
+- CoursePayment.
+- PaymentSummary.
+
+Los contratos permiten representar operaciones como:
+
+- Listar compras.
+- Crear una compra.
+- Consultar el detalle de una compra.
+- Obtener métodos de pago.
+- Reportar un pago.
+
+Las estructuras externas se representan mediante PurchaseDto y las
+conversiones se centralizan en purchaseMapper.
+
+## 15. Mis cursos y progreso
+
+El módulo Mis Cursos representa la relación del usuario con los cursos
+en los que está inscrito.
+
+Los modelos principales incluyen:
+
+- MyCourse.
+- MyCourseDetail.
+- CourseSession.
+- CourseProgress.
+
+El progreso académico se encuentra relacionado con la inscripción y
+contempla datos como:
+
+- Número total de sesiones.
+- Sesiones completadas.
+- Porcentaje de avance.
+- Porcentaje de asistencia.
+- Estado académico.
+- Fecha de última actividad.
+- Fecha de finalización.
+
+## 16. Notificaciones
+
+La aplicación contempla el modelo Notification y un contrato Repository
+para el acceso futuro a notificaciones académicas.
+
+Actualmente CMP_Site dispone de estructuras de notificación en el
+backend, pero no se ha identificado una API de cliente completa para
+consultarlas desde CMP_Movil.
+
+Por esta razón no se inventará un endpoint ni una implementación Service
+que todavía no exista.
+
+La implementación se realizará cuando CMP_Site exponga el contrato
+correspondiente.
+
+## 17. Seguridad
+
+CMP_Movil no almacenará secretos propios de la infraestructura.
+
+Información como:
+
+```text
 DATABASE_URL
 JWT_SECRET
+```
 
-permanecerán únicamente en el backend.
+debe permanecer exclusivamente en CMP_Site.
 
-La aplicación utilizará HTTPS para comunicarse con CMP_Site.
+La aplicación utilizará HTTPS para comunicarse con el backend.
 
-Los tokens de autenticación deberán almacenarse utilizando almacenamiento
-seguro del dispositivo.
+Los tokens o credenciales de sesión móvil deberán almacenarse mediante un
+mecanismo seguro del dispositivo.
 
 Para builds de producción se contempla protección adicional mediante:
 
-- javascript-obfuscator para código JavaScript.
-- R8 / ProGuard para código Android.
+```text
+javascript-obfuscator
+R8 / ProGuard
+```
 
-Estas medidas complementan la seguridad, pero no sustituyen los controles
-del backend.
+javascript-obfuscator permitirá dificultar el análisis del código
+JavaScript generado.
 
-## 14. Organización modular
+R8 / ProGuard permitirá aplicar optimización y ofuscación al código
+Android en builds de producción.
 
-La arquitectura permite desarrollar de manera separada los módulos:
+Estas herramientas complementan la seguridad, pero no sustituyen los
+controles implementados en el backend.
 
-Autenticación
-Catálogo
-Adquisición
-Mis cursos
-Progreso
-Cuenta
-Notificaciones
+## 18. Organización modular
 
-Las funcionalidades comparten infraestructura sin crear dependencias
-directas entre pantallas.
+La arquitectura permite desarrollar de forma separada los siguientes
+módulos funcionales:
 
-## 15. Estados de ViewModel
+- Autenticación.
+- Catálogo.
+- Adquisición.
+- Mis cursos.
+- Progreso.
+- Cuenta.
+- Notificaciones.
 
-Los ViewModels que consuman datos deberán contemplar estados como:
+Cada módulo puede incorporar sus propios Models, DTO, Mappers, Services,
+Repositories, ViewModels y Views según sus necesidades.
 
-idle
-loading
-success
-empty
-error
+## 19. Flujo general
 
-Esto permite mantener la lógica de estado fuera de la interfaz gráfica.
+La regla principal de comunicación será:
 
-## 16. Regla general
+```text
+View
+  ↓
+ViewModel
+  ↓
+Repository
+  ↓
+Service
+  ↓
+HTTP Client
+  ↓
+API CMP_Site
+  ↓
+PostgreSQL
+```
 
-La regla principal de comunicación es:
+La aplicación móvil nunca utilizará:
 
-View → ViewModel → Repository → Service → API
-
-Nunca:
-
+```text
 View → API
+```
 
 ni:
 
+```text
 React Native → PostgreSQL
+```
 
-## 17. Diagrama lógico
+## 20. Diagrama lógico
 
 ```text
 ┌─────────────────────────────┐
 │            View             │
 │ Screens / Components        │
 └──────────────┬──────────────┘
-               │
+               │ acciones / estado
                ▼
 ┌─────────────────────────────┐
 │          ViewModel          │
-│ Estado y presentación       │
+│ Estado y lógica presentación│
 └──────────────┬──────────────┘
-               │
+               │ contrato
                ▼
 ┌─────────────────────────────┐
 │         Repository          │
@@ -310,15 +593,31 @@ React Native → PostgreSQL
                ▼
 ┌─────────────────────────────┐
 │           Service           │
-│ DTO / llamadas de API       │
+│ Operaciones / DTO           │
 └──────────────┬──────────────┘
                │
                ▼
 ┌─────────────────────────────┐
 │        HTTP Client          │
+│ Solicitudes / errores       │
+└──────────────┬──────────────┘
+               │ HTTPS
+               ▼
+┌─────────────────────────────┐
+│        API CMP_Site         │
 └──────────────┬──────────────┘
                │
                ▼
 ┌─────────────────────────────┐
-│        API CMP_Site         │
+│         PostgreSQL          │
 └─────────────────────────────┘
+```
+
+Los Mappers convierten la información entre los DTO de infraestructura y
+los modelos internos utilizados por la aplicación.
+
+La arquitectura definitiva establece como flujo estándar:
+
+```text
+View → ViewModel → Repository → Service → HTTP Client → API CMP_Site
+```
