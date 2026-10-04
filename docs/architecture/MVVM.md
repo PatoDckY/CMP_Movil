@@ -1,216 +1,324 @@
-# Arquitectura MVVM — SIMG-CMP Móvil
+# Arquitectura de software — SIMG-CMP Móvil
 
 ## 1. Propósito
 
-La aplicación móvil SIMG-CMP utilizará el patrón arquitectónico
-Model-View-ViewModel (MVVM) para separar la interfaz de usuario,
-la lógica de presentación, las reglas y estructuras del dominio,
-y el acceso a servicios externos.
+La aplicación móvil SIMG-CMP utiliza una arquitectura por capas con
+MVVM como patrón principal de presentación.
 
-La arquitectura busca facilitar el mantenimiento, las pruebas,
-la reutilización de componentes y el crecimiento modular de la aplicación.
+El objetivo es separar la interfaz de usuario, la lógica de presentación,
+el dominio y el acceso a datos, reduciendo el acoplamiento entre los
+componentes de la aplicación.
+
+La aplicación móvil no tendrá acceso directo a PostgreSQL.
+
+Toda comunicación con los datos del sistema deberá realizarse mediante
+las rutas API proporcionadas por CMP_Site.
 
 ## 2. Capas principales
 
-### View
+### Presentación
 
-La capa View contiene las pantallas y componentes visuales de la aplicación.
+La capa de presentación contiene las pantallas y componentes visuales.
 
-Responsabilidades:
+Incluye principalmente:
 
-- Mostrar información al usuario.
-- Capturar acciones e interacción.
-- Representar estados de carga, éxito, vacío y error.
-- Delegar la lógica al ViewModel.
-- No realizar directamente solicitudes HTTP ni implementar reglas de negocio.
+- screens
+- components
+- navigation
 
-Ejemplos:
+Las vistas únicamente muestran información, reciben acciones del usuario
+y delegan la lógica al ViewModel correspondiente.
 
-- LoginScreen
-- RegisterScreen
-- CatalogScreen
-- CourseDetailScreen
-- MyCoursesScreen
-- ProfileScreen
+Una View no debe realizar solicitudes HTTP directamente.
 
-### ViewModel
+### Lógica de presentación
 
-La capa ViewModel actúa como intermediaria entre View y Model/servicios.
+La lógica de presentación está implementada mediante ViewModels.
 
-Responsabilidades:
+Los ViewModels son responsables de:
 
-- Administrar el estado utilizado por la vista.
-- Procesar eventos generados por el usuario.
-- Ejecutar casos de uso de la aplicación.
-- Consumir servicios o repositorios.
-- Preparar información para mostrarla en la interfaz.
-- Administrar estados de carga y error.
+- Mantener el estado requerido por las pantallas.
+- Procesar acciones del usuario.
+- Solicitar operaciones a los repositorios.
+- Gestionar estados de carga.
+- Gestionar estados de éxito, vacío y error.
+- Proporcionar a la View información preparada para mostrarse.
 
-La View no debe conocer los detalles de comunicación con APIs.
+El ViewModel no debe conocer los detalles de HTTP ni los formatos de
+respuesta utilizados por CMP_Site.
 
-### Model
+## 3. Dominio
 
-La capa Model representa las entidades y estructuras de datos utilizadas
-por la aplicación.
-
-Responsabilidades:
-
-- Definir entidades del dominio.
-- Definir tipos e interfaces.
-- Representar datos recibidos o enviados a servicios.
-- Mantener modelos independientes de la interfaz de usuario.
+La capa de dominio contiene los modelos internos utilizados por la
+aplicación móvil.
 
 Ejemplos:
 
 - User
 - Course
-- Lesson
-- Progress
+- Purchase
+- MyCourse
+- CourseProgress
 - Notification
-- Acquisition
 
-### Services / Data
+Los modelos representan la información utilizada dentro de la aplicación
+y son independientes del formato utilizado por la API.
 
-Esta capa será responsable de la comunicación con fuentes externas.
+Los modelos no deben depender de pantallas, componentes ni mecanismos HTTP.
 
-Responsabilidades:
+## 4. Capa de datos e infraestructura
 
-- Comunicación con la API de SIMG-CMP.
-- Solicitudes HTTP.
-- Manejo de autenticación y tokens.
-- Persistencia local cuando corresponda.
-- Conversión de respuestas externas a estructuras utilizadas por la aplicación.
+La capa de datos es responsable de comunicarse con fuentes externas.
 
-La View nunca deberá acceder directamente a esta capa.
+Está formada principalmente por:
 
-## 3. Flujo de comunicación
+- Repository
+- Service
+- DTO
+- Mapper
+- HTTP Client
+- Storage
 
-El flujo principal será:
+Los Services conocen los endpoints de CMP_Site y trabajan con DTO.
+
+Los Repositories exponen modelos del dominio al resto de la aplicación y
+ocultan los detalles de la fuente de datos.
+
+Los Mappers convierten entre DTO y modelos internos.
+
+## 5. DTO
+
+DTO significa Data Transfer Object.
+
+Un DTO representa exactamente la estructura utilizada para intercambiar
+información con CMP_Site.
+
+Ejemplo:
+
+Curso recibido desde CMP_Site:
+
+idCurso
+tituloCurso
+descripcion
+
+La aplicación móvil no debe depender directamente de estos nombres en sus
+pantallas o ViewModels.
+
+## 6. Mapper
+
+Los Mappers convierten DTO externos en modelos internos de la aplicación.
+
+Ejemplo:
+
+idCurso → id
+tituloCurso → title
+descripcion → description
+
+De esta forma, un cambio en el formato del backend puede resolverse en la
+capa de datos sin modificar directamente las pantallas.
+
+## 7. Repository Pattern
+
+El patrón Repository se utiliza como intermediario entre los ViewModels y
+las fuentes de datos.
+
+El ViewModel depende de una abstracción Repository y no de una
+implementación HTTP concreta.
+
+Flujo:
 
 View
 ↓
 ViewModel
 ↓
-Service / Repository
+Repository
 ↓
-API SIMG-CMP
-
-La respuesta seguirá el flujo inverso:
-
-API SIMG-CMP
+Service
 ↓
-Service / Repository
+HTTP Client
+↓
+API CMP_Site
+
+La respuesta sigue el camino inverso.
+
+API CMP_Site
+↓
+DTO
+↓
+Service
+↓
+Repository
+↓
+Mapper
+↓
+Model
 ↓
 ViewModel
 ↓
 View
 
-## 4. Separación de responsabilidades
+## 8. Service
 
-La aplicación mantendrá separadas las siguientes responsabilidades:
+Los Services representan las operaciones disponibles en la API.
 
-Presentación:
-Pantallas, componentes y navegación.
+Ejemplos:
 
-Lógica de presentación:
-ViewModels y administración de estados.
+CourseService
+AuthService
+PurchaseService
+MyCoursesService
 
-Dominio:
-Modelos, entidades y reglas independientes de la interfaz.
+Un Service devuelve o recibe DTO y no debe contener lógica visual.
 
-Datos:
-Servicios, clientes HTTP, almacenamiento local y comunicación con APIs.
+## 9. Dependency Injection
 
-## 5. Dependencias
+Las dependencias se proporcionarán desde un punto de composición.
 
-Las dependencias deberán dirigirse desde las capas externas hacia las
-abstracciones internas.
+Esto permite que un ViewModel trabaje con contratos en lugar de depender
+directamente de implementaciones concretas.
 
-Una pantalla podrá utilizar un ViewModel.
+Ejemplo:
 
-Un ViewModel podrá utilizar servicios o repositorios.
+CourseRepositoryImpl recibe CourseService mediante constructor.
 
-Los servicios podrán utilizar el cliente HTTP y mecanismos de almacenamiento.
+Las dependencias compartidas se construyen desde config/dependencies.ts.
 
-Los modelos no deberán depender de pantallas ni componentes visuales.
+## 10. Observer
 
-## 6. Módulos previstos
+React utiliza un comportamiento basado en Observer mediante estado,
+hooks y Context.
 
-La arquitectura deberá permitir desarrollar de manera independiente los módulos:
+Cuando cambia el estado gestionado por un ViewModel, la View recibe la
+actualización y vuelve a renderizar la información correspondiente.
 
-- Autenticación
-- Catálogo
-- Adquisición
-- Mis cursos
-- Progreso
-- Cuenta
-- Notificaciones
+No será necesario crear un sistema Observer paralelo mientras los mecanismos
+reactivos de React cubran esta responsabilidad.
 
-Además existirán elementos compartidos para navegación, componentes,
-configuración y utilidades.
+## 11. Singleton
 
-## 7. Manejo de estado
+Singleton se reservará para componentes de infraestructura que deban
+compartir una única instancia durante la ejecución de la aplicación.
 
-Cada ViewModel será responsable del estado necesario para su funcionalidad.
+Ejemplos previstos:
 
-Como mínimo, los flujos que consuman servicios deberán contemplar:
+- Cliente HTTP.
+- Configuración compartida.
+- Administrador de almacenamiento seguro.
 
-- Estado inicial.
-- Estado de carga.
-- Estado exitoso.
-- Estado vacío cuando corresponda.
-- Estado de error.
+No se utilizará Singleton para modelos, pantallas o ViewModels.
 
-La selección de herramientas adicionales de manejo global de estado deberá
-justificarse según las necesidades reales del proyecto.
+## 12. Proxy
 
-## 8. Navegación
+El patrón Proxy se utilizará principalmente para controlar solicitudes
+HTTP autenticadas.
 
-La navegación será responsabilidad de la capa de presentación.
+Un cliente HTTP autenticado podrá envolver al cliente HTTP principal para:
 
-Se distinguirán inicialmente dos contextos:
+- Leer el token almacenado de forma segura.
+- Agregar Authorization cuando corresponda.
+- Interceptar respuestas 401.
+- Centralizar comportamiento de autenticación.
 
-- Navegación pública.
-- Navegación autenticada.
+Su implementación se realizará cuando se desarrolle el flujo de sesión
+móvil.
 
-La autorización para acceder a determinadas funcionalidades dependerá del
-estado de autenticación y de las reglas definidas por el sistema.
+## 13. Seguridad
 
-## 9. Regla general de arquitectura
+Los secretos de infraestructura no deberán almacenarse en la aplicación.
 
-Una pantalla no debe contener reglas de negocio ni acceder directamente
-a la API.
+Variables como:
 
-La comunicación recomendada será:
+DATABASE_URL
+JWT_SECRET
 
-View → ViewModel → Service/Repository → API
+permanecerán únicamente en el backend.
 
-Esto permitirá mantener bajo acoplamiento entre la interfaz y la infraestructura.
+La aplicación utilizará HTTPS para comunicarse con CMP_Site.
 
-## 10. Diagrama lógico
+Los tokens de autenticación deberán almacenarse utilizando almacenamiento
+seguro del dispositivo.
+
+Para builds de producción se contempla protección adicional mediante:
+
+- javascript-obfuscator para código JavaScript.
+- R8 / ProGuard para código Android.
+
+Estas medidas complementan la seguridad, pero no sustituyen los controles
+del backend.
+
+## 14. Organización modular
+
+La arquitectura permite desarrollar de manera separada los módulos:
+
+Autenticación
+Catálogo
+Adquisición
+Mis cursos
+Progreso
+Cuenta
+Notificaciones
+
+Las funcionalidades comparten infraestructura sin crear dependencias
+directas entre pantallas.
+
+## 15. Estados de ViewModel
+
+Los ViewModels que consuman datos deberán contemplar estados como:
+
+idle
+loading
+success
+empty
+error
+
+Esto permite mantener la lógica de estado fuera de la interfaz gráfica.
+
+## 16. Regla general
+
+La regla principal de comunicación es:
+
+View → ViewModel → Repository → Service → API
+
+Nunca:
+
+View → API
+
+ni:
+
+React Native → PostgreSQL
+
+## 17. Diagrama lógico
 
 ```text
 ┌─────────────────────────────┐
 │            View             │
 │ Screens / Components        │
 └──────────────┬──────────────┘
-               │ acciones / estado
+               │
                ▼
 ┌─────────────────────────────┐
 │          ViewModel          │
-│ Estado + lógica presentación│
+│ Estado y presentación       │
 └──────────────┬──────────────┘
                │
                ▼
 ┌─────────────────────────────┐
-│     Services/Repositories   │
-│ API / Storage / Auth        │
+│         Repository          │
+│ Abstracción de datos        │
 └──────────────┬──────────────┘
                │
                ▼
 ┌─────────────────────────────┐
-│        API SIMG-CMP         │
+│           Service           │
+│ DTO / llamadas de API       │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│        HTTP Client          │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│        API CMP_Site         │
 └─────────────────────────────┘
-```
-Models y entidades son compartidos por las capas que los requieren,
-sin depender de la interfaz gráfica.

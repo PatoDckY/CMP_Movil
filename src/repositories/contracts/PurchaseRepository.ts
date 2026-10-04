@@ -3,11 +3,16 @@ import {
   CreatePurchaseInput,
   PaymentMethod,
   Purchase,
+  PurchaseDetail,
   ReportPaymentInput,
 } from '../../models/Purchase';
 
 export interface PurchaseRepository {
   getPurchases(): Promise<Purchase[]>;
+
+  getPurchaseDetail(
+    purchaseId: number,
+  ): Promise<PurchaseDetail>;
 
   createPurchase(
     data: CreatePurchaseInput,

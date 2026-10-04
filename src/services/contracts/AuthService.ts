@@ -1,15 +1,21 @@
 import {
   LoginRequestDto,
-  LoginSuccessResponseDto,
+  LoginResponseDto,
   RegisterRequestDto,
   RegisterSuccessResponseDto,
+  SendOtpRequestDto,
+  SendOtpResponseDto,
   SessionResponseDto,
 } from '../dto/AuthDto';
 
 export interface AuthService {
   login(
     data: LoginRequestDto,
-  ): Promise<LoginSuccessResponseDto>;
+  ): Promise<LoginResponseDto>;
+
+  sendRegistrationOtp(
+    data: SendOtpRequestDto,
+  ): Promise<SendOtpResponseDto>;
 
   register(
     data: RegisterRequestDto,

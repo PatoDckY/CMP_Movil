@@ -74,6 +74,7 @@ export interface ParticipantDto {
 export interface PurchaseParticipantSummaryDto {
   idCompraParticipante: number;
   numeroCupo: number;
+
   estado: string;
   observaciones: string | null;
 
@@ -103,6 +104,7 @@ export interface PurchaseSummaryDto {
 
 export interface CreatePurchaseResponseDto {
   compra: PurchaseSummaryDto;
+
   participantes: PurchaseParticipantSummaryDto[];
 }
 
@@ -118,6 +120,7 @@ export interface PurchaseListResponseDto {
 
 export interface PaymentMethodDto {
   idMetodoPago: number;
+
   nombre: string;
   descripcion: string | null;
 
@@ -134,6 +137,7 @@ export interface ReportPaymentRequestDto {
 
   monto: string;
   fechaPago: string;
+
   referencia: string | null;
 
   canalComprobante: ReceiptChannelDto;
@@ -151,10 +155,12 @@ export interface ReportPaymentRequestDto {
 export interface PaymentSummaryDto {
   idPago: number;
   idCompra: number;
+
   idMetodoPago: number;
   metodoPago: string;
 
   monto: string;
+
   fechaPago: string;
   fechaReporte: string;
 
@@ -170,12 +176,35 @@ export interface PaymentSummaryDto {
   fechaEnvioWhatsapp: string | null;
 
   estado: string;
+
   motivoRechazo: string | null;
   observaciones: string | null;
 }
 
 export interface ReportPaymentResponseDto {
   message: string;
+
   pago: PaymentSummaryDto;
+
   estadoCompra: string;
+}
+
+export interface PurchaseDetailResponseDto {
+  compra: PurchaseSummaryDto & {
+    observaciones: string | null;
+  };
+
+  participantes: PurchaseParticipantSummaryDto[];
+
+  metodosPago: PaymentMethodDto[];
+
+  pagos: PaymentSummaryDto[];
+
+  resumenPago: {
+    totalCompra: string;
+    totalReportado: string;
+    saldoPendiente: string;
+
+    pagoCompletoReportado: boolean;
+  };
 }

@@ -16,6 +16,22 @@ export interface LoginMfaRequiredResponseDto {
   email: string;
 }
 
+export type LoginResponseDto =
+  | LoginSuccessResponseDto
+  | LoginMfaRequiredResponseDto;
+
+export interface SendOtpRequestDto {
+  email: string;
+  nombre: string;
+}
+
+export interface SendOtpResponseDto {
+  success: true;
+  message: string;
+  email: string;
+  emailEnviado: boolean;
+}
+
 export interface AuthErrorResponseDto {
   message: string;
   bloqueado?: boolean;

@@ -3,6 +3,8 @@ import {
   CreatePurchaseInput,
   PaymentMethod,
   Purchase,
+  PurchaseDetail,
+  PurchaseParticipant,
   ReportPaymentInput,
 } from '../models/Purchase';
 
@@ -10,6 +12,8 @@ import {
   CreatePurchaseRequestDto,
   PaymentMethodDto,
   PaymentSummaryDto,
+  PurchaseDetailResponseDto,
+  PurchaseParticipantSummaryDto,
   PurchaseSummaryDto,
   ReportPaymentRequestDto,
 } from '../services/dto/PurchaseDto';
@@ -22,6 +26,7 @@ export function mapPurchaseDtoToModel(
     folio: dto.folioCompra,
 
     userId: dto.usuarioId,
+
     courseId: dto.cursoId,
     courseTitle: dto.tituloCurso,
 
@@ -44,6 +49,7 @@ export function mapPaymentMethodDtoToModel(
 ): PaymentMethod {
   return {
     id: dto.idMetodoPago,
+
     name: dto.nombre,
     description: dto.descripcion,
 
@@ -63,10 +69,20 @@ export function mapPaymentDtoToModel(
     paymentMethodName: dto.metodoPago,
 
     amount: dto.monto,
+
     paymentDate: dto.fechaPago,
     reportDate: dto.fechaReporte,
 
     reference: dto.referencia,
+
+    receiptChannel: dto.canalComprobante,
+
+    receiptPath: dto.rutaComprobante,
+    originalFileName: dto.nombreArchivoOriginal,
+    fileType: dto.tipoArchivo,
+
+    receiptConfirmed: dto.comprobanteConfirmado,
+    whatsappSentAt: dto.fechaEnvioWhatsapp,
 
     status: dto.estado,
 
@@ -80,6 +96,7 @@ export function mapCreatePurchaseInputToDto(
 ): CreatePurchaseRequestDto {
   return {
     cursoId: input.courseId,
+
     cantidadCupos: input.quantity,
 
     participantes: input.participants.map(participant => {
@@ -92,8 +109,10 @@ export function mapCreatePurchaseInputToDto(
       return {
         participante: {
           nombre: participant.participant.firstName,
+
           apellidoPaterno:
             participant.participant.paternalLastName,
+
           apellidoMaterno:
             participant.participant.maternalLastName,
 
@@ -103,6 +122,7 @@ export function mapCreatePurchaseInputToDto(
           sexo: participant.participant.gender,
 
           telefono: participant.participant.phone,
+
           correo: participant.participant.email,
         },
       };
@@ -119,18 +139,105 @@ export function mapReportPaymentInputToDto(
     idMetodoPago: input.paymentMethodId,
 
     monto: input.amount,
+
     fechaPago: input.paymentDate,
+
     referencia: input.reference,
 
     canalComprobante: input.receiptChannel,
 
     rutaComprobante: input.receiptPath,
+
     nombreArchivoOriginal: input.originalFileName,
+
     tipoArchivo: input.fileType,
 
     comprobanteConfirmado: input.receiptConfirmed,
+
     fechaEnvioWhatsapp: input.whatsappSentAt,
 
     observaciones: input.observations,
+  };
+}
+
+function mapPurchaseParticipantDtoToModel(
+  dto: PurchaseParticipantSummaryDto,
+): PurchaseParticipant {
+  return {
+    purchaseParticipantId:
+      dto.idCompraParticipante,
+
+    slotNumber: dto.numeroCupo,
+
+    status: dto.estado,
+
+    observations: dto.observaciones,
+
+    participant: {
+      id: dto.participante.idParticipante,
+
+      userId: dto.participante.usuarioId,
+
+      firstName: dto.participante.nombre,
+
+      paternalLastName:
+        dto.participante.apellidoPaterno,
+
+      maternalLastName:
+        dto.participante.apellidoMaterno,
+
+      birthDate:
+        dto.participante.fechaNacimiento,
+
+      gender: dto.participante.sexo,
+
+      phone: dto.participante.telefono,
+
+      email: dto.participante.correo,
+
+      active: dto.participante.activo,
+    },
+  };
+}
+
+export function mapPurchaseDetailDtoToModel(
+  dto: PurchaseDetailResponseDto,
+): PurchaseDetail {
+  return {
+    purchase: {
+      ...mapPurchaseDtoToModel(dto.compra),
+
+      observations:
+        dto.compra.observaciones,
+    },
+
+    participants:
+      dto.participantes.map(
+        mapPurchaseParticipantDtoToModel,
+      ),
+
+    paymentMethods:
+      dto.metodosPago.map(
+        mapPaymentMethodDtoToModel,
+      ),
+
+    payments:
+      dto.pagos.map(
+        mapPaymentDtoToModel,
+      ),
+
+    paymentSummary: {
+      totalPurchase:
+        dto.resumenPago.totalCompra,
+
+      totalReported:
+        dto.resumenPago.totalReportado,
+
+      pendingBalance:
+        dto.resumenPago.saldoPendiente,
+
+      fullPaymentReported:
+        dto.resumenPago.pagoCompletoReportado,
+    },
   };
 }
