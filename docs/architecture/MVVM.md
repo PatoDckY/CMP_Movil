@@ -211,6 +211,6 @@ Esto permitirá mantener bajo acoplamiento entre la interfaz y la infraestructur
 ┌─────────────────────────────┐
 │        API SIMG-CMP         │
 └─────────────────────────────┘
-
+```
 Models y entidades son compartidos por las capas que los requieren,
 sin depender de la interfaz gráfica.
