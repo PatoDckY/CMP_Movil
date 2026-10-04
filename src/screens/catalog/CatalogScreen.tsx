@@ -53,23 +53,23 @@ export function CatalogScreen(): React.JSX.Element {
 
       <FlatList
         data={courses}
-        keyExtractor={item => String(item.idCurso)}
+        keyExtractor={item => String(item.id)}
         renderItem={({item}) => (
           <View style={styles.card}>
             <Text style={styles.courseTitle}>
-              {item.tituloCurso}
+              {item.title}
             </Text>
 
             <Text>
-              {item.descripcion ?? 'Sin descripción'}
+              {item.description ?? 'Sin descripción'}
             </Text>
 
             <Text>
-              Instructor: {item.instructorNombre ?? 'No asignado'}
+              Instructor: {item.instructorName ?? 'No asignado'}
             </Text>
 
             <Text>
-              Costo: ${item.costo ?? '0.00'}
+              Costo: ${item.cost ?? '0.00'}
             </Text>
           </View>
         )}

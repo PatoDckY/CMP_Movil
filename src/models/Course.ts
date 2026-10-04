@@ -1,34 +1,34 @@
 export interface Course {
-  idCurso: number;
-  tituloCurso: string;
-  descripcion: string | null;
+  id: number;
+  title: string;
+  description: string | null;
 
-  idInstructor: number;
-  instructorNombre?: string | null;
-  instructorEspecialidad?: string | null;
+  instructorId: number;
+  instructorName?: string | null;
+  instructorSpecialty?: string | null;
 
-  idCategoria: number;
-  categoriaNombre?: string | null;
+  categoryId: number;
+  categoryName?: string | null;
 
-  idUbicacion: number | null;
-  ubicacionNombre?: string | null;
-  ubicacionDireccion?: string | null;
+  locationId: number | null;
+  locationName?: string | null;
+  locationAddress?: string | null;
 
-  idModalidad: number;
-  modalidadNombre?: string | null;
+  modalityId: number;
+  modalityName?: string | null;
 
-  fechaInicio: string;
-  fechaFin: string;
-  horario: string | null;
-  dirigidoA: string | null;
+  startDate: string;
+  endDate: string;
+  schedule: string | null;
+  targetAudience: string | null;
 
-  cupoMaximo: number;
-  cuposOcupados: number | null;
+  maxCapacity: number;
+  occupiedCapacity: number | null;
 
-  costo: string | null;
-  urlImagenPortada: string | null;
+  cost: string | null;
+  imageUrl: string | null;
 
-  activo: boolean;
+  active: boolean;
 
   createdAt?: string | null;
   updatedAt?: string | null;

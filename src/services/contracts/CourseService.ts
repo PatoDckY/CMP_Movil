@@ -1,6 +1,6 @@
-import {Course} from '../../models/Course';
+import {CourseDto} from '../dto/CourseDto';
 
 export interface CourseService {
-  getCourses(): Promise<Course[]>;
-  getCourseById(id: number): Promise<Course>;
+  getCourses(): Promise<CourseDto[]>;
+  getCourseById(id: number): Promise<CourseDto>;
 }
