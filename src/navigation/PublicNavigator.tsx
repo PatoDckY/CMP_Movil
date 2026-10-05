@@ -6,6 +6,8 @@ import {
 } from 'react-native';
 import {
   createNativeStackNavigator,
+  NativeStackNavigationOptions,
+  NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 
 import {LoginScreen} from '../screens/auth/LoginScreen';
@@ -18,6 +20,49 @@ import {PublicStackParamList} from './types';
 
 const Stack =
   createNativeStackNavigator<PublicStackParamList>();
+
+type CatalogNavigation =
+  NativeStackNavigationProp<
+    PublicStackParamList,
+    'Catalog'
+  >;
+
+type CatalogOptionsProps = {
+  navigation: CatalogNavigation;
+};
+
+type AccessButtonProps = {
+  onPress: () => void;
+};
+
+function AccessButton({
+  onPress,
+}: AccessButtonProps): React.JSX.Element {
+  return (
+    <Pressable
+      hitSlop={10}
+      onPress={onPress}>
+      <Text style={styles.accessText}>
+        Acceder
+      </Text>
+    </Pressable>
+  );
+}
+
+function getCatalogOptions({
+  navigation,
+}: CatalogOptionsProps): NativeStackNavigationOptions {
+  return {
+    title: 'Cursos',
+    headerRight: () => (
+      <AccessButton
+        onPress={() =>
+          navigation.navigate('Login')
+        }
+      />
+    ),
+  };
+}
 
 export function PublicNavigator(): React.JSX.Element {
   return (
@@ -41,20 +86,7 @@ export function PublicNavigator(): React.JSX.Element {
       <Stack.Screen
         name="Catalog"
         component={CatalogScreen}
-        options={({navigation}) => ({
-          title: 'Cursos',
-          headerRight: () => (
-            <Pressable
-              hitSlop={10}
-              onPress={() =>
-                navigation.navigate('Login')
-              }>
-              <Text style={styles.accessText}>
-                Acceder
-              </Text>
-            </Pressable>
-          ),
-        })}
+        options={getCatalogOptions}
       />
 
       <Stack.Screen
