@@ -1,8 +1,9 @@
 import React from 'react';
-import {CatalogScreen} from './src/screens/catalog/CatalogScreen';
+
+import {RootNavigator} from './src/navigation/RootNavigator';
 
 function App(): React.JSX.Element {
-  return <CatalogScreen />;
+  return <RootNavigator />;
 }
 
 export default App;
