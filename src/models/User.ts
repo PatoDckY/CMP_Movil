@@ -22,6 +22,12 @@ export interface RegisterUserInput {
   verificationCode: string;
 }
 
+export interface RegistrationOtpResult {
+  message: string;
+  email: string;
+  emailSent: boolean;
+}
+
 export type LoginResult =
   | {
       status: 'authenticated';

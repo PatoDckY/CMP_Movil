@@ -4,8 +4,13 @@ export class ApiError extends Error {
   status: number;
   data: unknown;
 
-  constructor(message: string, status: number, data: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    data: unknown,
+  ) {
     super(message);
+
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
@@ -13,7 +18,10 @@ export class ApiError extends Error {
 }
 
 function getErrorMessage(data: unknown): string {
-  if (typeof data !== 'object' || data === null) {
+  if (
+    typeof data !== 'object' ||
+    data === null
+  ) {
     return 'Ocurrió un error al comunicarse con el servidor';
   }
 
@@ -33,18 +41,30 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const headers = new Headers(options.headers);
+  const headers = new Headers(
+    options.headers,
+  );
 
-  headers.set('Accept', 'application/json');
+  headers.set(
+    'Accept',
+    'application/json',
+  );
 
   if (options.body) {
-    headers.set('Content-Type', 'application/json');
+    headers.set(
+      'Content-Type',
+      'application/json',
+    );
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const response = await fetch(
+    `${API_BASE_URL}${endpoint}`,
+    {
+      ...options,
+      credentials: 'include',
+      headers,
+    },
+  );
 
   const text = await response.text();
 
@@ -59,7 +79,11 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    throw new ApiError(getErrorMessage(data), response.status, data);
+    throw new ApiError(
+      getErrorMessage(data),
+      response.status,
+      data,
+    );
   }
 
   return data as T;

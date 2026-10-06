@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
 
   container: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
 
   hero: {

@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -13,6 +14,7 @@ import {InfoCard} from '../../components/common/InfoCard';
 import {PrimaryButton} from '../../components/common/PrimaryButton';
 import {SectionHeader} from '../../components/common/SectionHeader';
 import {AuthenticatedStackParamList} from '../../navigation/types';
+import {useSession} from '../../session/SessionContext';
 import {styles} from './AccountScreen.styles';
 
 type Props = NativeStackScreenProps<
@@ -23,9 +25,27 @@ type Props = NativeStackScreenProps<
 export function AccountScreen({
   navigation,
 }: Props): React.JSX.Element {
-  const handleLogout = () => {
-    // En A14 aquí conectaremos el cierre de sesión real.
+  const {
+    user,
+    logout,
+  } = useSession();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error instanceof Error
+          ? error.message
+          : 'No fue posible cerrar la sesión.',
+      );
+    }
   };
+
+  const initial =
+    user?.fullName?.charAt(0).toUpperCase() ??
+    'U';
 
   return (
     <ScrollView
@@ -50,7 +70,7 @@ export function AccountScreen({
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            U
+            {initial}
           </Text>
         </View>
 
@@ -60,11 +80,13 @@ export function AccountScreen({
           </Text>
 
           <Text style={styles.profileName}>
-            Información pendiente
+            {user?.fullName ??
+              'Usuario autenticado'}
           </Text>
 
           <Text style={styles.profileEmail}>
-            Los datos se cargarán desde tu sesión.
+            {user?.email ??
+              'Correo no disponible'}
           </Text>
         </View>
       </View>
@@ -73,32 +95,40 @@ export function AccountScreen({
         <SectionHeader
           number="01"
           eyebrow="INFORMACIÓN"
-          title="Datos personales"
+          title="Datos de la sesión"
+        />
+
+        <DetailRow
+          label="ID de usuario"
+          value={
+            user
+              ? String(user.id)
+              : 'No disponible'
+          }
         />
 
         <DetailRow
           label="Nombre"
-          value="Pendiente de conexión"
+          value={
+            user?.fullName ??
+            'No disponible'
+          }
         />
 
         <DetailRow
           label="Correo electrónico"
-          value="Pendiente de conexión"
+          value={
+            user?.email ??
+            'No disponible'
+          }
         />
 
         <DetailRow
-          label="Teléfono"
-          value="Pendiente de conexión"
-        />
-
-        <DetailRow
-          label="Edad"
-          value="Pendiente de conexión"
-        />
-
-        <DetailRow
-          label="Sexo"
-          value="Pendiente de conexión"
+          label="Rol"
+          value={
+            user?.role ??
+            'No disponible'
+          }
           last
         />
       </View>
@@ -123,7 +153,10 @@ export function AccountScreen({
               Mis cursos
             </Text>
 
-            <Text style={styles.optionDescription}>
+            <Text
+              style={
+                styles.optionDescription
+              }>
               Consulta los cursos relacionados con tu cuenta.
             </Text>
           </View>
@@ -148,7 +181,10 @@ export function AccountScreen({
               Historial de compras
             </Text>
 
-            <Text style={styles.optionDescription}>
+            <Text
+              style={
+                styles.optionDescription
+              }>
               Revisa las operaciones realizadas.
             </Text>
           </View>
@@ -161,8 +197,8 @@ export function AccountScreen({
 
       <InfoCard
         icon="S"
-        title="Seguridad de la cuenta"
-        description="La gestión real de sesión y credenciales se conectará en la siguiente etapa."
+        title="Sesión protegida"
+        description="Tu identidad se obtiene de la sesión autenticada validada por CMP-Site."
       />
 
       <View style={styles.logoutContainer}>
@@ -174,8 +210,8 @@ export function AccountScreen({
       </View>
 
       <Text style={styles.logoutHelper}>
-        El cierre de sesión será funcional cuando integremos
-        la autenticación real.
+        Al cerrar sesión se eliminará la sesión del servidor
+        y volverás al área pública.
       </Text>
 
       <AppFooter />

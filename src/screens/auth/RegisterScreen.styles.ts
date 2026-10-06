@@ -1,6 +1,6 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import {colors} from '../../theme/colors';
+import { colors } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
   screen: {
@@ -10,9 +10,23 @@ export const styles = StyleSheet.create({
 
   container: {
     padding: 20,
-    paddingBottom: 42,
+    paddingBottom: 120,
+  },
+  otpContainer: {
+    marginTop: 16,
   },
 
+  otpHelper: {
+    color: colors.textSecondary,
+    fontSize: 9,
+    lineHeight: 14,
+    marginTop: -8,
+  },
+
+  disabled: {
+    opacity: 0.55,
+  },
+  
   hero: {
     backgroundColor: colors.primary,
     borderRadius: 26,
