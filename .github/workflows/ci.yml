@@ -42,3 +42,23 @@ jobs:
 
       - name: Ejecutar pruebas
         run: npm test -- --runInBand
+
+  security:
+    name: Análisis SAST con Semgrep
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Obtener código del repositorio
+        uses: actions/checkout@v7
+
+      - name: Configurar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Semgrep
+        run: pip install semgrep
+
+      - name: Ejecutar análisis SAST
+        run: semgrep scan --config auto --severity ERROR --error .
