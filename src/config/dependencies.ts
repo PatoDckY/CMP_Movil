@@ -1,11 +1,11 @@
-import {AuthRepositoryImpl} from '../repositories/implementations/AuthRepositoryImpl';
+import {RepositoryFactory} from '../factories/RepositoryFactory';
 import {CourseRepositoryImpl} from '../repositories/implementations/CourseRepositoryImpl';
-
-import {authService} from '../services/implementations/authService';
 import {courseService} from '../services/implementations/courseService';
 
 export const authRepository =
-  new AuthRepositoryImpl(authService);
+  RepositoryFactory.createAuthRepository();
 
 export const courseRepository =
-  new CourseRepositoryImpl(courseService);
+  new CourseRepositoryImpl(
+    courseService,
+  );
