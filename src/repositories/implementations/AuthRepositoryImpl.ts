@@ -1,13 +1,17 @@
-import { mapUserDtoToModel } from '../../mappers/userMapper';
+import {mapUserDtoToModel} from '../../mappers/userMapper';
 import {
   LoginResult,
   RegisterUserInput,
   RegistrationOtpResult,
   User,
 } from '../../models/User';
-import { AuthService } from '../../services/contracts/AuthService';
-import { ApiError } from '../../services/http/httpClient';
-import { AuthRepository } from '../contracts/AuthRepository';
+import {AuthService} from '../../services/contracts/AuthService';
+import {ApiError} from '../../services/http/httpClient';
+import {
+  StoredTokens,
+  tokenStorage,
+} from '../../services/security/tokenStorage';
+import {AuthRepository} from '../contracts/AuthRepository';
 
 type MfaErrorData = {
   message?: string;
@@ -15,10 +19,22 @@ type MfaErrorData = {
   email?: string;
 };
 
-export class AuthRepositoryImpl implements AuthRepository {
+interface AuthTokenStorage {
+  saveTokens(
+    tokens: StoredTokens,
+  ): Promise<void>;
+
+  clearTokens(): Promise<void>;
+}
+
+export class AuthRepositoryImpl
+  implements AuthRepository
+{
   constructor(
     private readonly service: AuthService,
-  ) { }
+    private readonly storage:
+      AuthTokenStorage = tokenStorage,
+  ) {}
 
   async login(
     email: string,
@@ -27,11 +43,20 @@ export class AuthRepositoryImpl implements AuthRepository {
     try {
       const response =
         await this.service.login({
-          correo: email.trim().toLowerCase(),
+          correo: email
+            .trim()
+            .toLowerCase(),
           contrasena: password,
         });
 
       if ('usuario' in response) {
+        await this.storage.saveTokens({
+          accessToken:
+            response.accessToken,
+          refreshToken:
+            response.refreshToken,
+        });
+
         return {
           status: 'authenticated',
           user: mapUserDtoToModel(
@@ -49,7 +74,8 @@ export class AuthRepositoryImpl implements AuthRepository {
       if (
         error instanceof ApiError &&
         error.status === 403 &&
-        typeof error.data === 'object' &&
+        typeof error.data ===
+          'object' &&
         error.data !== null
       ) {
         const data =
@@ -81,10 +107,11 @@ export class AuthRepositoryImpl implements AuthRepository {
       email.trim().toLowerCase();
 
     const response =
-      await this.service.sendRegistrationOtp({
-        email: normalizedEmail,
-        nombre: name.trim(),
-      });
+      await this.service
+        .sendRegistrationOtp({
+          email: normalizedEmail,
+          nombre: name.trim(),
+        });
 
     return {
       message: response.message,
@@ -115,10 +142,12 @@ export class AuthRepositoryImpl implements AuthRepository {
     });
   }
 
-  async getCurrentUser(): Promise<User | null> {
+  async getCurrentUser():
+    Promise<User | null> {
     try {
       const response =
-        await this.service.checkSession();
+        await this.service
+          .checkSession();
 
       if (
         !response.ok ||
@@ -143,6 +172,10 @@ export class AuthRepositoryImpl implements AuthRepository {
   }
 
   async logout(): Promise<void> {
-    await this.service.logout();
+    try {
+      await this.service.logout();
+    } finally {
+      await this.storage.clearTokens();
+    }
   }
 }

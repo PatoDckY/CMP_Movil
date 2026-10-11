@@ -8,6 +8,13 @@ export interface LoginRequestDto {
 export interface LoginSuccessResponseDto {
   message: string;
   usuario: UserDto;
+
+  accessToken: string;
+  refreshToken: string;
+  tokenType: 'Bearer';
+
+  expiresIn: number;
+  refreshExpiresIn: number;
 }
 
 export interface LoginMfaRequiredResponseDto {
