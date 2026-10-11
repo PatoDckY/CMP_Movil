@@ -1,4 +1,5 @@
-import {API_BASE_URL} from '../../config/apiConfig';
+import { API_BASE_URL } from '../../config/apiConfig';
+import { tokenStorage } from '../security/tokenStorage';
 
 export class ApiError extends Error {
   status: number;
@@ -15,6 +16,13 @@ export class ApiError extends Error {
     this.status = status;
     this.data = data;
   }
+}
+
+interface RefreshResponse {
+  message?: string;
+  accessToken: string;
+  tokenType: 'Bearer';
+  expiresIn: number;
 }
 
 function getErrorMessage(
@@ -39,11 +47,32 @@ function getErrorMessage(
   );
 }
 
+async function parseResponse(
+  response: Response,
+): Promise<unknown> {
+  const text =
+    await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
 export class HttpClient {
   private static instance:
     HttpClient | null = null;
 
   private readonly baseUrl: string;
+
+  private refreshPromise:
+    Promise<string | null> | null =
+    null;
 
   private constructor() {
     this.baseUrl = API_BASE_URL;
@@ -58,13 +87,15 @@ export class HttpClient {
     return HttpClient.instance;
   }
 
-  async request<T>(
+  private async sendRequest(
     endpoint: string,
-    options: RequestInit = {},
-  ): Promise<T> {
-    const headers = new Headers(
-      options.headers,
-    );
+    options: RequestInit,
+    accessToken: string | null,
+  ): Promise<Response> {
+    const headers =
+      new Headers(
+        options.headers,
+      );
 
     headers.set(
       'Accept',
@@ -78,27 +109,186 @@ export class HttpClient {
       );
     }
 
-    const response = await fetch(
+    if (
+      accessToken &&
+      !headers.has(
+        'Authorization',
+      )
+    ) {
+      headers.set(
+        'Authorization',
+        `Bearer ${accessToken}`,
+      );
+    }
+
+    return fetch(
       `${this.baseUrl}${endpoint}`,
       {
         ...options,
-        credentials: 'include',
         headers,
       },
     );
+  }
 
-    const text =
-      await response.text();
+  private shouldAttemptRefresh(
+    endpoint: string,
+  ): boolean {
+    return (
+      endpoint !==
+      '/auth/mobile/login' &&
+      endpoint !==
+      '/auth/mobile/refresh'
+    );
+  }
 
-    let data: unknown = null;
+  private async refreshAccessToken():
+    Promise<string | null> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
 
-    if (text) {
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = text;
+    this.refreshPromise =
+      this.performRefresh();
+
+    try {
+      return await this
+        .refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private async performRefresh():
+    Promise<string | null> {
+    const refreshToken =
+      await tokenStorage
+        .getRefreshToken();
+
+    if (!refreshToken) {
+      return null;
+    }
+
+    try {
+      const response =
+        await fetch(
+          `${this.baseUrl}/auth/mobile/refresh`,
+          {
+            method: 'POST',
+            headers: {
+              Accept:
+                'application/json',
+              'Content-Type':
+                'application/json',
+            },
+            body: JSON.stringify({
+              refreshToken,
+            }),
+          },
+        );
+
+      const data =
+        await parseResponse(
+          response,
+        );
+
+      if (!response.ok) {
+        if (
+          response.status ===
+          401 ||
+          response.status === 403
+        ) {
+          await tokenStorage
+            .clearTokens();
+        }
+
+        return null;
+      }
+
+      if (
+        typeof data !==
+        'object' ||
+        data === null
+      ) {
+        return null;
+      }
+
+      const refreshResponse =
+        data as Partial<RefreshResponse>;
+
+      if (
+        typeof refreshResponse
+          .accessToken !==
+        'string' ||
+        !refreshResponse
+          .accessToken
+      ) {
+        return null;
+      }
+
+      await tokenStorage
+        .updateAccessToken(
+          refreshResponse
+            .accessToken,
+        );
+
+      return refreshResponse
+        .accessToken;
+    } catch {
+      /*
+       * Un error de red no elimina
+       * el refresh token.
+       *
+       * Puede tratarse simplemente
+       * de falta temporal de conexión.
+       */
+      return null;
+    }
+  }
+
+  async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
+    const accessToken =
+      await tokenStorage
+        .getAccessToken();
+
+    let response =
+      await this.sendRequest(
+        endpoint,
+        options,
+        accessToken,
+      );
+
+    /*
+     * Si el access token expiró,
+     * intenta renovarlo una sola vez
+     * y repite la petición original.
+     */
+    if (
+      response.status === 401 &&
+      this.shouldAttemptRefresh(
+        endpoint,
+      )
+    ) {
+      const newAccessToken =
+        await this
+          .refreshAccessToken();
+
+      if (newAccessToken) {
+        response =
+          await this.sendRequest(
+            endpoint,
+            options,
+            newAccessToken,
+          );
       }
     }
+
+    const data =
+      await parseResponse(
+        response,
+      );
 
     if (!response.ok) {
       throw new ApiError(

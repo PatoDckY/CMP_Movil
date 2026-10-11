@@ -6,6 +6,11 @@ describe('AuthRepositoryImpl', () => {
   let service: jest.Mocked<AuthService>;
   let repository: AuthRepositoryImpl;
 
+  let storage: {
+    saveTokens: jest.Mock;
+    clearTokens: jest.Mock;
+  };
+
   const userDto = {
     id: 10,
     nombre: 'Luis',
@@ -28,19 +33,33 @@ describe('AuthRepositoryImpl', () => {
       logout: jest.fn(),
     };
 
+    storage = {
+      saveTokens: jest.fn(),
+      clearTokens: jest.fn(),
+    };
+
     repository =
       new AuthRepositoryImpl(
         service,
+        storage,
       );
   });
 
   test(
-    'normaliza el correo y devuelve usuario autenticado',
+    'normaliza el correo, guarda los tokens y devuelve usuario autenticado',
     async () => {
       service.login.mockResolvedValue({
         message:
           'Inicio de sesión exitoso',
         usuario: userDto,
+        accessToken:
+          'access-token-test',
+        refreshToken:
+          'refresh-token-test',
+        tokenType: 'Bearer',
+        expiresIn: 900,
+        refreshExpiresIn:
+          2592000,
       });
 
       const result =
@@ -52,9 +71,26 @@ describe('AuthRepositoryImpl', () => {
       expect(
         service.login,
       ).toHaveBeenCalledWith({
-        correo: 'luis@example.com',
-        contrasena: 'Password#1',
+        correo:
+          'luis@example.com',
+        contrasena:
+          'Password#1',
       });
+
+      expect(
+        storage.saveTokens,
+      ).toHaveBeenCalledWith({
+        accessToken:
+          'access-token-test',
+        refreshToken:
+          'refresh-token-test',
+      });
+
+      expect(
+        storage.saveTokens,
+      ).toHaveBeenCalledTimes(
+        1,
+      );
 
       expect(result).toEqual({
         status: 'authenticated',
@@ -105,6 +141,10 @@ describe('AuthRepositoryImpl', () => {
         message:
           'Código MFA requerido',
       });
+
+      expect(
+        storage.saveTokens,
+      ).not.toHaveBeenCalled();
     },
   );
 
@@ -272,7 +312,7 @@ describe('AuthRepositoryImpl', () => {
   );
 
   test(
-    'ejecuta el cierre de sesión mediante el servicio',
+    'ejecuta el cierre de sesión y elimina los tokens locales',
     async () => {
       service.logout
         .mockResolvedValue(
@@ -283,6 +323,40 @@ describe('AuthRepositoryImpl', () => {
 
       expect(
         service.logout,
+      ).toHaveBeenCalledTimes(
+        1,
+      );
+
+      expect(
+        storage.clearTokens,
+      ).toHaveBeenCalledTimes(
+        1,
+      );
+    },
+  );
+
+  test(
+    'elimina los tokens locales aunque falle el logout del servidor',
+    async () => {
+      service.logout.mockRejectedValue(
+        new ApiError(
+          'Error del servidor',
+          500,
+          {
+            message:
+              'No fue posible cerrar la sesión',
+          },
+        ),
+      );
+
+      await expect(
+        repository.logout(),
+      ).rejects.toThrow(
+        'Error del servidor',
+      );
+
+      expect(
+        storage.clearTokens,
       ).toHaveBeenCalledTimes(
         1,
       );

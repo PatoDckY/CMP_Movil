@@ -15,7 +15,7 @@ export const authService: AuthService = {
     data: LoginRequestDto,
   ): Promise<LoginResponseDto> {
     return apiRequest<LoginResponseDto>(
-      '/auth/login',
+      '/auth/mobile/login',
       {
         method: 'POST',
         body: JSON.stringify(data),
@@ -59,7 +59,7 @@ export const authService: AuthService = {
   async logout(): Promise<void> {
     await apiRequest<{
       message: string;
-    }>('/auth/logout', {
+    }>('/auth/mobile/logout', {
       method: 'POST',
     });
   },
