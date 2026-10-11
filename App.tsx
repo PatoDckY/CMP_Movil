@@ -1,7 +1,13 @@
-import React from 'react';
+import React, {
+  useEffect,
+  useState,
+} from 'react';
 import {
+  ActivityIndicator,
   StatusBar,
   StyleSheet,
+  Text,
+  View,
 } from 'react-native';
 import {
   SafeAreaProvider,
@@ -13,8 +19,52 @@ import {
 
 import {RootNavigator} from './src/navigation/RootNavigator';
 import {SessionProvider} from './src/session/SessionContext';
+import {
+  initializeCmpSslPinning,
+} from './src/services/security/sslPinning';
+
+type PinningStatus =
+  | 'loading'
+  | 'ready'
+  | 'error';
 
 function App(): React.JSX.Element {
+  const [
+    pinningStatus,
+    setPinningStatus,
+  ] = useState<PinningStatus>(
+    'loading',
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    initializeCmpSslPinning()
+      .then(() => {
+        if (mounted) {
+          setPinningStatus(
+            'ready',
+          );
+        }
+      })
+      .catch(error => {
+        console.error(
+          'Error inicializando Certificate Pinning:',
+          error,
+        );
+
+        if (mounted) {
+          setPinningStatus(
+            'error',
+          );
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <KeyboardProvider>
       <SafeAreaProvider>
@@ -29,9 +79,55 @@ function App(): React.JSX.Element {
             'top',
             'bottom',
           ]}>
-          <SessionProvider>
-            <RootNavigator />
-          </SessionProvider>
+          {pinningStatus ===
+            'loading' && (
+            <View
+              style={
+                styles.centerContainer
+              }>
+              <ActivityIndicator />
+
+              <Text
+                style={
+                  styles.statusText
+                }>
+                Inicializando conexión
+                segura...
+              </Text>
+            </View>
+          )}
+
+          {pinningStatus ===
+            'error' && (
+            <View
+              style={
+                styles.centerContainer
+              }>
+              <Text
+                style={
+                  styles.errorTitle
+                }>
+                Conexión segura no
+                disponible
+              </Text>
+
+              <Text
+                style={
+                  styles.statusText
+                }>
+                No fue posible validar
+                la identidad del
+                servidor.
+              </Text>
+            </View>
+          )}
+
+          {pinningStatus ===
+            'ready' && (
+            <SessionProvider>
+              <RootNavigator />
+            </SessionProvider>
+          )}
         </SafeAreaView>
       </SafeAreaProvider>
     </KeyboardProvider>
@@ -41,6 +137,23 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+  },
+
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+
+  statusText: {
+    marginTop: 12,
+    textAlign: 'center',
+  },
+
+  errorTitle: {
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
 
