@@ -78,18 +78,13 @@ export function CourseDetailScreen({
 }
 
 export function AuthenticatedCourseDetailScreen({
+  navigation,
   route,
 }: AuthenticatedProps): React.JSX.Element {
   const handlePurchase = () => {
-    Alert.alert(
-      'Proceso de compra',
-      'La interfaz está preparada. La compra real se conectará cuando integremos el módulo correspondiente.',
-      [
-        {
-          text: 'Entendido',
-        },
-      ],
-    );
+    navigation.navigate('CreatePurchase', {
+      courseId: route.params.courseId,
+    });
   };
 
   return (

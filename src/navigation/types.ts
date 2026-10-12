@@ -1,3 +1,4 @@
+
 export type CourseFlowParamList = {
   Catalog: undefined;
 
@@ -19,8 +20,16 @@ export type AuthenticatedStackParamList =
     MyCourses: undefined;
     PurchaseHistory: undefined;
 
+    CreatePurchase: {
+      courseId: number;
+    };
+
     PurchaseDetail: {
       purchaseId: number;
+    };
+
+    MyCourseDetail: {
+      enrollmentId: number;
     };
 
     Account: undefined;

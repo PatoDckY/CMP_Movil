@@ -1,15 +1,20 @@
-import React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-import {AccountScreen} from '../screens/account/AccountScreen';
-import {AuthenticatedCourseDetailScreen,} from '../screens/catalog/CourseDetailScreen';
-import {CatalogScreen} from '../screens/catalog/CatalogScreen';
-import {DashboardScreen} from '../screens/dashboard/DashboardScreen';
-import {MyCoursesScreen} from '../screens/myCourses/MyCoursesScreen';
-import {PurchaseDetailScreen} from '../screens/purchases/PurchaseDetailScreen';
-import {PurchaseHistoryScreen} from '../screens/purchases/PurchaseHistoryScreen';
-import {colors} from '../theme/colors';
-import {AuthenticatedStackParamList} from './types';
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { AccountScreen } from '../screens/account/AccountScreen';
+import { AuthenticatedCourseDetailScreen } from '../screens/catalog/CourseDetailScreen';
+import { CatalogScreen } from '../screens/catalog/CatalogScreen';
+import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
+import { MyCoursesScreen } from '../screens/myCourses/MyCoursesScreen';
+
+import { CreatePurchaseScreen } from '../screens/purchases/CreatePurchaseScreen';
+import { PurchaseDetailScreen } from '../screens/purchases/PurchaseDetailScreen';
+import { PurchaseHistoryScreen } from '../screens/purchases/PurchaseHistoryScreen';
+import { MyCourseDetailScreen, } from '../screens/myCourses/MyCourseDetailScreen';
+
+import { colors } from '../theme/colors';
+import { AuthenticatedStackParamList } from './types';
 
 const Stack =
   createNativeStackNavigator<AuthenticatedStackParamList>();
@@ -61,6 +66,14 @@ export function AuthenticatedNavigator(): React.JSX.Element {
       />
 
       <Stack.Screen
+        name="CreatePurchase"
+        component={CreatePurchaseScreen}
+        options={{
+          title: 'Comprar curso',
+        }}
+      />
+
+      <Stack.Screen
         name="PurchaseHistory"
         component={PurchaseHistoryScreen}
         options={{
@@ -81,6 +94,15 @@ export function AuthenticatedNavigator(): React.JSX.Element {
         component={AccountScreen}
         options={{
           title: 'Mi cuenta',
+        }}
+      />
+
+
+      <Stack.Screen
+        name="MyCourseDetail"
+        component={MyCourseDetailScreen}
+        options={{
+          title: 'Detalle de mi curso',
         }}
       />
     </Stack.Navigator>
