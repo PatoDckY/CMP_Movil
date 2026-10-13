@@ -1,4 +1,6 @@
+
 import React from 'react';
+
 import {
   Alert,
   Pressable,
@@ -6,16 +8,42 @@ import {
   Text,
   View,
 } from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
 
-import {AppFooter} from '../../components/common/AppFooter';
-import {DetailRow} from '../../components/common/DetailRow';
-import {InfoCard} from '../../components/common/InfoCard';
-import {PrimaryButton} from '../../components/common/PrimaryButton';
-import {SectionHeader} from '../../components/common/SectionHeader';
-import {AuthenticatedStackParamList} from '../../navigation/types';
-import {useSession} from '../../session/SessionContext';
-import {styles} from './AccountScreen.styles';
+import {
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
+
+import {
+  AppFooter,
+} from '../../components/common/AppFooter';
+
+import {
+  DetailRow,
+} from '../../components/common/DetailRow';
+
+import {
+  InfoCard,
+} from '../../components/common/InfoCard';
+
+import {
+  PrimaryButton,
+} from '../../components/common/PrimaryButton';
+
+import {
+  SectionHeader,
+} from '../../components/common/SectionHeader';
+
+import {
+  AuthenticatedStackParamList,
+} from '../../navigation/types';
+
+import {
+  useSession,
+} from '../../session/SessionContext';
+
+import {
+  styles,
+} from './AccountScreen.styles';
 
 type Props = NativeStackScreenProps<
   AuthenticatedStackParamList,
@@ -52,6 +80,8 @@ export function AccountScreen({
       style={styles.screen}
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}>
+
+      {/* ENCABEZADO */}
       <View style={styles.header}>
         <Text style={styles.eyebrow}>
           PERFIL
@@ -67,6 +97,7 @@ export function AccountScreen({
         </Text>
       </View>
 
+      {/* TARJETA DEL USUARIO */}
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
@@ -91,6 +122,7 @@ export function AccountScreen({
         </View>
       </View>
 
+      {/* SECCIÓN 01: INFORMACIÓN */}
       <View style={styles.section}>
         <SectionHeader
           number="01"
@@ -133,6 +165,7 @@ export function AccountScreen({
         />
       </View>
 
+      {/* SECCIÓN 02: ACTIVIDAD */}
       <View style={styles.section}>
         <SectionHeader
           number="02"
@@ -195,12 +228,54 @@ export function AccountScreen({
         </Pressable>
       </View>
 
+      {/* SECCIÓN 03: DERECHOS ARCO */}
+      <View style={styles.section}>
+        <SectionHeader
+          number="03"
+          eyebrow="PRIVACIDAD"
+          title="Protección de datos personales"
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Consultar y editar mis datos personales"
+          style={({pressed}) => [
+            styles.optionButton,
+            pressed && styles.pressed,
+          ]}
+          onPress={() =>
+            navigation.navigate(
+              'PersonalData',
+            )
+          }>
+          <View style={styles.optionContent}>
+            <Text style={styles.optionTitle}>
+              Mis datos personales
+            </Text>
+
+            <Text
+              style={
+                styles.optionDescription
+              }>
+              Consulta y rectifica los datos
+              personales asociados a tu cuenta.
+            </Text>
+          </View>
+
+          <Text style={styles.optionArrow}>
+            →
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* INFORMACIÓN DE SEGURIDAD */}
       <InfoCard
         icon="S"
         title="Sesión protegida"
         description="Tu identidad se obtiene de la sesión autenticada validada por CMP-Site."
       />
 
+      {/* CERRAR SESIÓN */}
       <View style={styles.logoutContainer}>
         <PrimaryButton
           label="Cerrar sesión"

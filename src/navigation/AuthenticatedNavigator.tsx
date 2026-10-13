@@ -1,20 +1,56 @@
 
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 
-import { AccountScreen } from '../screens/account/AccountScreen';
-import { AuthenticatedCourseDetailScreen } from '../screens/catalog/CourseDetailScreen';
-import { CatalogScreen } from '../screens/catalog/CatalogScreen';
-import { DashboardScreen } from '../screens/dashboard/DashboardScreen';
-import { MyCoursesScreen } from '../screens/myCourses/MyCoursesScreen';
+import {
+  AccountScreen,
+} from '../screens/account/AccountScreen';
 
-import { CreatePurchaseScreen } from '../screens/purchases/CreatePurchaseScreen';
-import { PurchaseDetailScreen } from '../screens/purchases/PurchaseDetailScreen';
-import { PurchaseHistoryScreen } from '../screens/purchases/PurchaseHistoryScreen';
-import { MyCourseDetailScreen, } from '../screens/myCourses/MyCourseDetailScreen';
+import {
+  PersonalDataScreen,
+} from '../screens/account/PersonalDataScreen';
 
-import { colors } from '../theme/colors';
-import { AuthenticatedStackParamList } from './types';
+import {
+  AuthenticatedCourseDetailScreen,
+} from '../screens/catalog/CourseDetailScreen';
+
+import {
+  CatalogScreen,
+} from '../screens/catalog/CatalogScreen';
+
+import {
+  DashboardScreen,
+} from '../screens/dashboard/DashboardScreen';
+
+import {
+  MyCoursesScreen,
+} from '../screens/myCourses/MyCoursesScreen';
+
+import {
+  MyCourseDetailScreen,
+} from '../screens/myCourses/MyCourseDetailScreen';
+
+import {
+  CreatePurchaseScreen,
+} from '../screens/purchases/CreatePurchaseScreen';
+
+import {
+  PurchaseDetailScreen,
+} from '../screens/purchases/PurchaseDetailScreen';
+
+import {
+  PurchaseHistoryScreen,
+} from '../screens/purchases/PurchaseHistoryScreen';
+
+import {
+  colors,
+} from '../theme/colors';
+
+import {
+  AuthenticatedStackParamList,
+} from './types';
 
 const Stack =
   createNativeStackNavigator<AuthenticatedStackParamList>();
@@ -97,6 +133,13 @@ export function AuthenticatedNavigator(): React.JSX.Element {
         }}
       />
 
+      <Stack.Screen
+        name="PersonalData"
+        component={PersonalDataScreen}
+        options={{
+          title: 'Mis datos personales',
+        }}
+      />
 
       <Stack.Screen
         name="MyCourseDetail"
