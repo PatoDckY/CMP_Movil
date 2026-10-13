@@ -34,8 +34,9 @@ import {
 } from '../../config/dependencies';
 
 import {
-  MyCourse,
-} from '../../models/MyCourse';
+  groupMyCourses,
+  MyCourseGroup,
+} from '../../viewmodels/myCourses/groupMyCourses';
 
 import {
   AuthenticatedStackParamList,
@@ -116,12 +117,12 @@ export function MyCoursesScreen({
 
   useFocusEffect(
     useCallback(() => {
-      void loadMyCourses();
+      loadMyCourses();
     }, [loadMyCourses]),
   );
 
   const refreshCourses = () => {
-    void loadMyCourses();
+    loadMyCourses();
   };
 
   const goToCatalog = () => {
@@ -144,18 +145,14 @@ export function MyCoursesScreen({
     state === 'success' ||
     state === 'empty';
 
-  const renderCourse = (
-    course: MyCourse,
-  ): React.JSX.Element => {
-    const progress =
-      normalizePercentage(
-        course.progress.progressPercentage,
-      );
+  // El backend devuelve una fila por inscripción.
+  // Agrupamos por curso para mostrar una sola tarjeta.
+  const groupedCourses = groupMyCourses(courses);
 
-    const attendance =
-      normalizePercentage(
-        course.progress.attendancePercentage,
-      );
+  const renderCourse = (
+    group: MyCourseGroup,
+  ): React.JSX.Element => {
+    const course = group.enrollments[0];
 
     const isUpcoming =
       course.situation === 'Próximamente';
@@ -168,7 +165,7 @@ export function MyCoursesScreen({
 
     return (
       <View
-        key={course.enrollmentId}
+        key={group.courseId}
         style={styles.courseCard}>
 
         {/* ENCABEZADO */}
@@ -213,75 +210,92 @@ export function MyCoursesScreen({
           </View>
         </View>
 
-        {/* DATOS DEL PARTICIPANTE */}
+        {/* UNA TARJETA POR CURSO, INSCRIPCIONES POR PARTICIPANTE */}
 
         <View style={styles.courseBody}>
-          <View style={styles.participantPanel}>
-            <Text style={styles.participantLabel}>
-              PARTICIPANTE
-            </Text>
-
-            <Text style={styles.participantName}>
-              {course.participantName}
-            </Text>
-          </View>
-
           <Text style={styles.datesText}>
             {formatDate(course.startDate)}
             {' — '}
             {formatDate(course.endDate)}
           </Text>
 
-          {/* AVANCE Y ASISTENCIA */}
+          <View style={styles.participantPanel}>
+            <Text style={styles.participantLabel}>
+              {group.enrollments.length === 1
+                ? '1 PARTICIPANTE INSCRITO'
+                : `${group.enrollments.length} PARTICIPANTES INSCRITOS`}
+            </Text>
 
-          <View style={styles.progressGrid}>
-            <View style={styles.progressBox}>
-              <View style={styles.progressTopRow}>
-                <Text style={styles.progressLabel}>
-                  Avance
-                </Text>
+            {group.enrollments.map(enrollment => {
+              const progress = normalizePercentage(
+                enrollment.progress.progressPercentage,
+              );
+              const attendance = normalizePercentage(
+                enrollment.progress.attendancePercentage,
+              );
 
-                <Text style={styles.progressValue}>
-                  {Math.round(progress)}%
-                </Text>
-              </View>
-
-              <View style={styles.progressTrack}>
+              return (
                 <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width:
-                        percentageWidth(progress),
-                    },
-                  ]}
-                />
-              </View>
-            </View>
+                  key={enrollment.enrollmentId}
+                  style={styles.participantRow}>
+                  <Text style={styles.participantName}>
+                    {enrollment.participantName}
+                  </Text>
+                  <Text style={styles.academicStatus}>
+                    Estado académico: {enrollment.progress.academicStatus}
+                  </Text>
 
-            <View style={styles.progressBox}>
-              <View style={styles.progressTopRow}>
-                <Text style={styles.progressLabel}>
-                  Asistencia
-                </Text>
+                  <View style={styles.progressGrid}>
+                    <View style={styles.progressBox}>
+                      <View style={styles.progressTopRow}>
+                        <Text style={styles.progressLabel}>
+                          Avance
+                        </Text>
+                        <Text style={styles.progressValue}>
+                          {Math.round(progress)}%
+                        </Text>
+                      </View>
+                      <View style={styles.progressTrack}>
+                        <View
+                          style={[
+                            styles.progressFill,
+                            {width: percentageWidth(progress)},
+                          ]}
+                        />
+                      </View>
+                    </View>
+                    <View style={styles.progressBox}>
+                      <View style={styles.progressTopRow}>
+                        <Text style={styles.progressLabel}>
+                          Asistencia
+                        </Text>
+                        <Text style={styles.progressValue}>
+                          {Math.round(attendance)}%
+                        </Text>
+                      </View>
+                      <View style={styles.progressTrack}>
+                        <View
+                          style={[
+                            styles.attendanceFill,
+                            {width: percentageWidth(attendance)},
+                          ]}
+                        />
+                      </View>
+                    </View>
+                  </View>
 
-                <Text style={styles.progressValue}>
-                  {Math.round(attendance)}%
-                </Text>
-              </View>
-
-              <View style={styles.progressTrack}>
-                <View
-                  style={[
-                    styles.attendanceFill,
-                    {
-                      width:
-                        percentageWidth(attendance),
-                    },
-                  ]}
-                />
-              </View>
-            </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver inscripción de ${enrollment.participantName}`}
+                    onPress={() => goToMyCourseDetail(enrollment.enrollmentId)}
+                    style={styles.detailButton}>
+                    <Text style={styles.detailButtonText}>
+                      Ver detalle de {enrollment.participantName}
+                    </Text>
+                  </Pressable>
+                </View>
+              );
+            })}
           </View>
 
           {/* PRÓXIMA SESIÓN */}
@@ -319,30 +333,6 @@ export function MyCoursesScreen({
             )}
           </View>
 
-          <Text style={styles.academicStatus}>
-            Estado académico:
-            {' '}
-            {course.progress.academicStatus}
-          </Text>
-
-          {/* DETALLE DE INSCRIPCIÓN */}
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={
-              `Ver detalle de mi inscripción a ${course.title}`
-            }
-            onPress={() =>
-              goToMyCourseDetail(
-                course.enrollmentId,
-              )
-            }
-            style={styles.detailButton}>
-
-            <Text style={styles.detailButtonText}>
-              Ver detalle del curso
-            </Text>
-          </Pressable>
         </View>
       </View>
     );
@@ -488,7 +478,7 @@ export function MyCoursesScreen({
 
       {hasCourses && (
         <View style={styles.coursesList}>
-          {courses.map(renderCourse)}
+          {groupedCourses.map(renderCourse)}
         </View>
       )}
 

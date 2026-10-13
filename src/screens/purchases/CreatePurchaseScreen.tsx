@@ -258,7 +258,7 @@ export function CreatePurchaseScreen({
     useState('');
 
   useEffect(() => {
-    void loadCourse(courseId);
+    loadCourse(courseId);
   }, [courseId, loadCourse]);
 
   const updateParticipant = (
@@ -599,7 +599,7 @@ export function CreatePurchaseScreen({
             confirmationOpen.current =
               false;
 
-            void createPurchase(data);
+            createPurchase(data);
           },
         },
       ],
@@ -645,7 +645,7 @@ export function CreatePurchaseScreen({
         <PrimaryButton
           label="Reintentar"
           onPress={() => {
-            void loadCourse(courseId);
+            loadCourse(courseId);
           }}
         />
       </View>
