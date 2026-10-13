@@ -10,13 +10,14 @@ import {
   NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 
-import {LoginScreen} from '../screens/auth/LoginScreen';
-import {RegisterScreen} from '../screens/auth/RegisterScreen';
-import {CatalogScreen} from '../screens/catalog/CatalogScreen';
-import {CourseDetailScreen} from '../screens/catalog/CourseDetailScreen';
-import {HomeScreen} from '../screens/home/HomeScreen';
-import {colors} from '../theme/colors';
-import {PublicStackParamList} from './types';
+import { LoginScreen } from '../screens/auth/LoginScreen';
+import { PasswordRecoveryScreen } from '../screens/auth/PasswordRecoveryScreen';
+import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { CatalogScreen } from '../screens/catalog/CatalogScreen';
+import { CourseDetailScreen } from '../screens/catalog/CourseDetailScreen';
+import { HomeScreen } from '../screens/home/HomeScreen';
+import { colors } from '../theme/colors';
+import { PublicStackParamList } from './types';
 
 const Stack =
   createNativeStackNavigator<PublicStackParamList>();
@@ -102,6 +103,14 @@ export function PublicNavigator(): React.JSX.Element {
         component={LoginScreen}
         options={{
           title: 'Iniciar sesión',
+        }}
+      />
+
+      <Stack.Screen
+        name="PasswordRecovery"
+        component={PasswordRecoveryScreen}
+        options={{
+          title: 'Recuperar contraseña',
         }}
       />
 

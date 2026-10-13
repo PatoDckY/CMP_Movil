@@ -12,6 +12,7 @@ export type PublicStackParamList =
     Home: undefined;
     Login: undefined;
     Register: undefined;
+    PasswordRecovery: undefined;
   };
 
 export type AuthenticatedStackParamList =
