@@ -215,6 +215,13 @@ export const styles = StyleSheet.create({
     marginTop: 5,
   },
 
+  participantRow: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    marginTop: 12,
+    paddingTop: 12,
+  },
+
   datesText: {
     color: colors.primary,
     fontSize: 12,
