@@ -34,4 +34,7 @@ export type AuthenticatedStackParamList =
     };
 
     Account: undefined;
+
+    // A17 - Acceso y Rectificación.
+    PersonalData: undefined;
   };

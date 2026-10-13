@@ -16,6 +16,14 @@ import {
 } from '../repositories/implementations/PurchaseRepositoryImpl';
 
 import {
+  PasswordRecoveryRepositoryImpl,
+} from '../repositories/implementations/PasswordRecoveryRepositoryImpl';
+
+import {
+  ProfileRepositoryImpl,
+} from '../repositories/implementations/ProfileRepositoryImpl';
+
+import {
   courseService,
 } from '../services/implementations/courseService';
 
@@ -28,8 +36,8 @@ import {
 } from '../services/implementations/purchaseService';
 
 import {
-  PasswordRecoveryRepositoryImpl,
-} from '../repositories/implementations/PasswordRecoveryRepositoryImpl';
+  profileService,
+} from '../services/implementations/profileService';
 
 /**
  * Repositorio de autenticación.
@@ -47,9 +55,6 @@ export const courseRepository =
 
 /**
  * Repositorio de compras.
- *
- * Mantiene el módulo de reservas,
- * historial y reportes de pago.
  */
 export const purchaseRepository =
   new PurchaseRepositoryImpl(
@@ -58,19 +63,25 @@ export const purchaseRepository =
 
 /**
  * Repositorio de Mis cursos.
- *
- * Consulta las inscripciones reales
- * del usuario en CMP_Site.
  */
 export const myCoursesRepository =
   new MyCoursesRepositoryImpl(
     myCourseService,
   );
 
-
-
 /**
  * Repositorio de recuperación de contraseña.
  */
 export const passwordRecoveryRepository =
   new PasswordRecoveryRepositoryImpl();
+
+/**
+ * A17 - Derechos ARCO.
+ *
+ * Acceso y rectificación de
+ * los datos personales.
+ */
+export const profileRepository =
+  new ProfileRepositoryImpl(
+    profileService,
+  );
