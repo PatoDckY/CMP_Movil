@@ -27,6 +27,10 @@ import {
   purchaseService,
 } from '../services/implementations/purchaseService';
 
+import {
+  PasswordRecoveryRepositoryImpl,
+} from '../repositories/implementations/PasswordRecoveryRepositoryImpl';
+
 /**
  * Repositorio de autenticación.
  */
@@ -62,3 +66,11 @@ export const myCoursesRepository =
   new MyCoursesRepositoryImpl(
     myCourseService,
   );
+
+
+
+/**
+ * Repositorio de recuperación de contraseña.
+ */
+export const passwordRecoveryRepository =
+  new PasswordRecoveryRepositoryImpl();

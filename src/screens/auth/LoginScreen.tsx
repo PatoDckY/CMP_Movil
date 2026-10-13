@@ -1,3 +1,4 @@
+
 import React, {
   useEffect,
   useState,
@@ -102,20 +103,24 @@ export function LoginScreen({
     });
   };
 
-  const handleLogin =
-    async () => {
-      const result =
-        await login();
+  const handleLogin = async () => {
+    const result = await login();
 
-      if (
-        result?.status ===
-        'authenticated'
-      ) {
-        setAuthenticatedUser(
-          result.user,
-        );
-      }
-    };
+    if (
+      result?.status ===
+      'authenticated'
+    ) {
+      setAuthenticatedUser(
+        result.user,
+      );
+    }
+  };
+
+  const goToPasswordRecovery = () => {
+    navigation.navigate(
+      'PasswordRecovery',
+    );
+  };
 
   return (
     <KeyboardAwareScrollView
@@ -130,6 +135,8 @@ export function LoginScreen({
         false
       }>
       <AuthBrand />
+
+      {/* ENCABEZADO */}
 
       <View style={styles.hero}>
         <View
@@ -166,6 +173,8 @@ export function LoginScreen({
         </Text>
       </View>
 
+      {/* FORMULARIO DE INICIO DE SESIÓN */}
+
       <View
         style={
           styles.formCard
@@ -192,6 +201,7 @@ export function LoginScreen({
         </Text>
 
         <TextInput
+          accessibilityLabel="Correo electrónico"
           value={email}
           onChangeText={setEmail}
           placeholder="correo@ejemplo.com"
@@ -218,6 +228,7 @@ export function LoginScreen({
             styles.passwordContainer
           }>
           <TextInput
+            accessibilityLabel="Contraseña"
             value={password}
             onChangeText={
               setPassword
@@ -242,6 +253,12 @@ export function LoginScreen({
           />
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              showPassword
+                ? 'Ocultar contraseña'
+                : 'Mostrar contraseña'
+            }
             style={
               styles.showButton
             }
@@ -265,7 +282,33 @@ export function LoginScreen({
           </Pressable>
         </View>
 
+        {/* A25: RECUPERACIÓN DE CONTRASEÑA */}
+
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Recuperar contraseña"
+          style={({pressed}) => [
+            styles.forgotPasswordButton,
+            pressed &&
+              !isLoading &&
+              styles.pressed,
+          ]}
+          disabled={isLoading}
+          onPress={
+            goToPasswordRecovery
+          }>
+          <Text
+            style={
+              styles.forgotPasswordText
+            }>
+            ¿Olvidaste tu contraseña?
+          </Text>
+        </Pressable>
+
+        {/* BOTÓN DE INICIO DE SESIÓN */}
+
+        <Pressable
+          accessibilityRole="button"
           style={({pressed}) => [
             styles.loginButton,
             pressed &&
@@ -297,6 +340,8 @@ export function LoginScreen({
           )}
         </Pressable>
 
+        {/* AVISO DE SEGURIDAD */}
+
         <View
           style={
             styles.securityNotice
@@ -316,6 +361,8 @@ export function LoginScreen({
           </Text>
         </View>
       </View>
+
+      {/* REGISTRO DE USUARIO */}
 
       <View
         style={
@@ -344,6 +391,7 @@ export function LoginScreen({
         </Text>
 
         <Pressable
+          accessibilityRole="button"
           style={({pressed}) => [
             styles.registerButton,
             pressed &&
@@ -366,10 +414,11 @@ export function LoginScreen({
         </Pressable>
       </View>
 
+      {/* VOLVER AL INICIO */}
+
       <Pressable
-        style={
-          styles.homeButton
-        }
+        accessibilityRole="button"
+        style={styles.homeButton}
         disabled={
           isLoading
         }

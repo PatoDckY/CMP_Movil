@@ -1,3 +1,4 @@
+
 import {StyleSheet} from 'react-native';
 
 import {colors} from '../../theme/colors';
@@ -132,11 +133,27 @@ export const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
+  // A25: ENLACE DE RECUPERACIÓN
+
+  forgotPasswordButton: {
+    alignSelf: 'flex-end',
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    marginTop: 2,
+  },
+
+  forgotPasswordText: {
+    color: colors.primary,
+    fontSize: 12,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
+  },
+
   loginButton: {
     minHeight: 51,
     backgroundColor: colors.accent,
     borderRadius: 12,
-    marginTop: 20,
+    marginTop: 8,
     paddingHorizontal: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
