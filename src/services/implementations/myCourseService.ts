@@ -28,6 +28,7 @@ export const myCourseService: MyCoursesService = {
           'Cache-Control': 'no-cache',
         },
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
@@ -58,6 +59,7 @@ export const myCourseService: MyCoursesService = {
           'Cache-Control': 'no-cache',
         },
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 };

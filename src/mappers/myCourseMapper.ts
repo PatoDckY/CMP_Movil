@@ -12,9 +12,36 @@ import {
   MyCoursesResponseDto,
 } from '../services/dto/MyCourseDto';
 
+function validateProgress(
+  dto: Pick<
+    MyCourseSummaryDto,
+    | 'sesionesTotales'
+    | 'sesionesCompletadas'
+    | 'porcentajeAvance'
+    | 'porcentajeAsistencia'
+  >,
+): void {
+  if (
+    !Number.isSafeInteger(dto.sesionesTotales) ||
+    dto.sesionesTotales < 0 ||
+    !Number.isSafeInteger(dto.sesionesCompletadas) ||
+    dto.sesionesCompletadas < 0 ||
+    dto.sesionesCompletadas > dto.sesionesTotales ||
+    !Number.isFinite(dto.porcentajeAvance) ||
+    dto.porcentajeAvance < 0 ||
+    dto.porcentajeAvance > 100 ||
+    !Number.isFinite(dto.porcentajeAsistencia) ||
+    dto.porcentajeAsistencia < 0 ||
+    dto.porcentajeAsistencia > 100
+  ) {
+    throw new Error('No fue posible verificar el progreso académico recibido.');
+  }
+}
+
 export function mapMyCourseDtoToModel(
   dto: MyCourseSummaryDto,
 ): MyCourse {
+  validateProgress(dto);
   return {
     enrollmentId: dto.idInscripcion,
     courseId: dto.idCurso,
@@ -111,6 +138,7 @@ function mapCourseSessionDtoToModel(
 export function mapMyCourseDetailDtoToModel(
   dto: MyCourseDetailDto,
 ): MyCourseDetail {
+  validateProgress(dto);
   return {
     enrollmentId: dto.idInscripcion,
 

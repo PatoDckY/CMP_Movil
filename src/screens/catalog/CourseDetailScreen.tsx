@@ -54,13 +54,13 @@ export function CourseDetailScreen({
         {
           text: 'Crear cuenta',
           onPress: () => {
-            navigation.navigate('Register');
+            navigation.navigate('Register', {purchaseCourseId: route.params.courseId});
           },
         },
         {
           text: 'Iniciar sesión',
           onPress: () => {
-            navigation.navigate('Login');
+            navigation.navigate('Login', {purchaseCourseId: route.params.courseId});
           },
         },
       ],
@@ -72,7 +72,7 @@ export function CourseDetailScreen({
       courseId={route.params.courseId}
       mode="public"
       onPurchase={handlePurchase}
-      onCreateAccount={() => navigation.navigate('Register')}
+      onCreateAccount={() => navigation.navigate('Register', {purchaseCourseId: route.params.courseId})}
     />
   );
 }
@@ -133,6 +133,9 @@ function CourseDetailContent({
         <Text style={styles.errorText}>
           {error ?? 'Ocurrió un problema inesperado.'}
         </Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Reintentar cargar el curso" style={styles.createAccountButton} onPress={() => loadCourse(courseId)}>
+          <Text style={styles.createAccountText}>Intentar nuevamente</Text>
+        </Pressable>
       </View>
     );
   }
@@ -264,6 +267,8 @@ function CourseDetailContent({
         {canPurchase && (
           <>
             <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={actionText}
               style={({ pressed }) => [
                 styles.purchaseButton,
                 pressed && styles.purchaseButtonPressed,
@@ -290,6 +295,8 @@ function CourseDetailContent({
                 </View>
 
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Crear cuenta para este curso"
                   style={({ pressed }) => [
                     styles.createAccountButton,
                     pressed && styles.createAccountButtonPressed,

@@ -66,6 +66,9 @@ export class MyCoursesRepositoryImpl
         enrollmentId,
       );
 
+    if (!responseDto.success || responseDto.curso?.idInscripcion !== enrollmentId || !Array.isArray(responseDto.curso.sesiones)) {
+      throw new Error('El servidor no confirmó el detalle de esta inscripción.');
+    }
     return mapMyCourseDetailDtoToModel(
       responseDto.curso,
     );

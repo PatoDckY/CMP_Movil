@@ -39,14 +39,18 @@ export function usePurchaseHistoryViewModel(
     useState<string | null>(null);
 
   const requestId = useRef(0);
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     return () => {
       requestId.current += 1;
+      loadingRef.current = false;
     };
   }, []);
 
   const loadPurchases = useCallback(async () => {
+    if (loadingRef.current) {return;}
+    loadingRef.current = true;
     const currentRequestId =
       ++requestId.current;
 
@@ -86,6 +90,8 @@ export function usePurchaseHistoryViewModel(
       );
 
       setState('error');
+    } finally {
+      if (currentRequestId === requestId.current) {loadingRef.current = false;}
     }
   }, [repository]);
 

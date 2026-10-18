@@ -18,6 +18,7 @@ import {
 } from '../../mappers/purchaseMapper';
 
 import {PurchaseService} from '../../services/contracts/PurchaseService';
+import {validatePurchase} from '../../models/purchaseValidation';
 import {PurchaseRepository} from '../contracts/PurchaseRepository';
 
 export class PurchaseRepositoryImpl
@@ -39,11 +40,17 @@ export class PurchaseRepositoryImpl
   async getPurchaseDetail(
     purchaseId: number,
   ): Promise<PurchaseDetail> {
+    if (!Number.isSafeInteger(purchaseId) || purchaseId <= 0) {
+      throw new Error('El identificador de la compra no es válido.');
+    }
     const response =
       await this.purchaseService.getPurchaseDetail(
         purchaseId,
       );
 
+    if (response?.compra?.idCompra !== purchaseId) {
+      throw new Error('El servidor no confirmó el detalle de esta compra.');
+    }
     return mapPurchaseDetailDtoToModel(
       response,
     );
@@ -52,6 +59,8 @@ export class PurchaseRepositoryImpl
   async createPurchase(
     data: CreatePurchaseInput,
   ): Promise<Purchase> {
+    const issue = validatePurchase(data);
+    if (issue) { throw new Error(issue.message); }
     const requestDto =
       mapCreatePurchaseInputToDto(data);
 
@@ -87,6 +96,9 @@ export class PurchaseRepositoryImpl
         requestDto,
       );
 
+    if (response?.pago?.idCompra !== purchaseId) {
+      throw new Error('No fue posible verificar el reporte de esta compra. Consulta el historial antes de reintentar.');
+    }
     return mapPaymentDtoToModel(
       response.pago,
     );

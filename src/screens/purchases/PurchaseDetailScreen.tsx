@@ -1,3 +1,4 @@
+import {isValidAmount, isValidPaymentDate} from '../../models/purchaseValidation';
 
 import React, {
   useEffect,
@@ -177,33 +178,6 @@ function formatPaymentTime(
 // Validación inicial del monto.
 // El ViewModel y el backend realizan
 // también sus propias validaciones.
-function isValidAmount(
-  value: string,
-  pendingBalance: string,
-): boolean {
-  const normalized = value.trim();
-
-  if (
-    !/^\d+(?:\.\d{1,2})?$/.test(
-      normalized,
-    )
-  ) {
-    return false;
-  }
-
-  const amount = Number(normalized);
-  const balance = Number(
-    pendingBalance,
-  );
-
-  return (
-    Number.isFinite(amount) &&
-    Number.isFinite(balance) &&
-    amount > 0 &&
-    amount <= balance
-  );
-}
-
 export function PurchaseDetailScreen({
   navigation,
   route,
@@ -560,16 +534,7 @@ export function PurchaseDetailScreen({
       return;
     }
 
-    const paymentTimestamp =
-      paymentDate.getTime();
-
-    if (
-      !Number.isFinite(
-        paymentTimestamp,
-      ) ||
-      paymentTimestamp >
-        Date.now() + 5 * 60 * 1000
-    ) {
+    if (!isValidPaymentDate(paymentDate)) {
       Alert.alert(
         'Fecha inválida',
         'La fecha y hora del pago no pueden estar en el futuro.',

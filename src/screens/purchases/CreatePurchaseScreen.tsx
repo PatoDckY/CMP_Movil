@@ -1,3 +1,4 @@
+import {isValidBirthDate, validatePurchase} from '../../models/purchaseValidation';
 
 import React, {
   useEffect,
@@ -117,36 +118,6 @@ function formatDate(
   return Number.isNaN(date.getTime())
     ? value
     : date.toLocaleString('es-MX');
-}
-
-function isValidBirthDate(
-  value: string,
-): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const [year, month, day] =
-    value.split('-').map(Number);
-
-  const date = new Date(
-    Date.UTC(year, month - 1, day),
-  );
-
-  const today = new Date();
-
-  const todayUTC = Date.UTC(
-    today.getUTCFullYear(),
-    today.getUTCMonth(),
-    today.getUTCDate(),
-  );
-
-  return (
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day &&
-    date.getTime() <= todayUTC
-  );
 }
 
 function formatBirthDateForApi(
@@ -459,81 +430,6 @@ export function CreatePurchaseScreen({
       return;
     }
 
-    for (
-      let i = 0;
-      i < participants.length;
-      i++
-    ) {
-      const item = participants[i];
-
-      if (
-        !item.firstName.trim() ||
-        !item.paternalLastName.trim()
-      ) {
-        revealParticipant(item.key);
-
-        Alert.alert(
-          'Datos incompletos',
-          `Completa el nombre y apellido paterno del participante ${i + 1}.`,
-        );
-
-        return;
-      }
-
-      if (!item.gender) {
-        revealParticipant(item.key);
-
-        Alert.alert(
-          'Datos incompletos',
-          `Selecciona el sexo del participante ${i + 1}.`,
-        );
-
-        return;
-      }
-
-      const birthDate =
-        item.birthDate.trim();
-
-      if (
-        birthDate &&
-        !isValidBirthDate(birthDate)
-      ) {
-        revealParticipant(item.key);
-
-        Alert.alert(
-          'Fecha inválida',
-          `Revisa la fecha de nacimiento del participante ${i + 1}.`,
-        );
-
-        return;
-      }
-
-      const email =
-        item.email.trim();
-
-      if (
-        email &&
-        (
-          email.length > 150 ||
-          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-            email,
-          )
-        )
-      ) {
-        revealParticipant(
-          item.key,
-          true,
-        );
-
-        Alert.alert(
-          'Correo inválido',
-          `Revisa el correo del participante ${i + 1}.`,
-        );
-
-        return;
-      }
-    }
-
     const data: CreatePurchaseInput = {
       courseId: course.id,
 
@@ -574,6 +470,15 @@ export function CreatePurchaseScreen({
       userNotes:
         notes.trim() || null,
     };
+
+    const issue = validatePurchase(data);
+    if (issue) {
+      if (issue.participantIndex !== undefined) {
+        revealParticipant(participants[issue.participantIndex].key, true);
+      }
+      Alert.alert('Revisa la reserva', issue.message);
+      return;
+    }
 
     confirmationOpen.current = true;
 
@@ -1008,7 +913,7 @@ export function CreatePurchaseScreen({
                   />
 
                   <Text style={styles.fieldLabel}>
-                    Sexo *
+                    Sexo (opcional)
                   </Text>
 
                   <View style={styles.genderGrid}>
