@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: Lint, TypeScript y pruebas
@@ -23,12 +27,14 @@ jobs:
 
     steps:
       - name: Obtener código del repositorio
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: '22.11.0'
+          node-version-file: '.nvmrc'
           cache: npm
 
       - name: Instalar dependencias
@@ -38,10 +44,47 @@ jobs:
         run: npm run lint
 
       - name: Verificar TypeScript
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Ejecutar pruebas
-        run: npm test -- --runInBand
+        run: npm run test:ci
+
+      - name: Conservar resultados de caja blanca
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cobertura-jest
+          path: coverage/
+          if-no-files-found: warn
+          retention-days: 7
+
+  android:
+    name: Compilación Android Debug
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Obtener código del repositorio
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Configurar Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+      - name: Configurar Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Compilar sin ejecutar la aplicación ni publicar artefactos
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon --console=plain
 
   security:
     name: Análisis SAST con Semgrep
@@ -50,15 +93,17 @@ jobs:
 
     steps:
       - name: Obtener código del repositorio
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
 
       - name: Configurar Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
 
       - name: Instalar Semgrep
-        run: pip install semgrep
+        run: pip install semgrep==1.181.0
 
       - name: Ejecutar análisis SAST
-        run: semgrep scan --config auto --severity ERROR --error .
+        run: semgrep scan --config p/typescript --config p/secrets --severity ERROR --error --metrics off --no-git-ignore src App.tsx index.js android/app/src/main/java
