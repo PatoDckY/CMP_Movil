@@ -2,6 +2,11 @@
 import {
   RepositoryFactory,
 } from '../factories/RepositoryFactory';
+import {AccountRepositoryImpl} from '../repositories/implementations/AccountRepositoryImpl';
+import {accountService} from '../services/implementations/accountService';
+import {passwordRecoveryService} from '../services/implementations/passwordRecoveryService';
+
+export const accountRepository = new AccountRepositoryImpl(accountService);
 
 import {
   CourseRepositoryImpl,
@@ -73,7 +78,7 @@ export const myCoursesRepository =
  * Repositorio de recuperación de contraseña.
  */
 export const passwordRecoveryRepository =
-  new PasswordRecoveryRepositoryImpl();
+  new PasswordRecoveryRepositoryImpl(passwordRecoveryService);
 
 /**
  * A17 - Derechos ARCO.

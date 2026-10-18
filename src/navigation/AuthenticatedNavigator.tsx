@@ -1,5 +1,7 @@
 
 import React from 'react';
+import {AccountDeletionScreen} from '../screens/account/AccountDeletionScreen';
+import {LegalInformationScreen} from '../screens/account/LegalInformationScreen';
 import {
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
@@ -140,6 +142,9 @@ export function AuthenticatedNavigator(): React.JSX.Element {
           title: 'Mis datos personales',
         }}
       />
+
+      <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} options={{title: 'Solicitud de eliminación'}} />
+      <Stack.Screen name="LegalInformation" component={LegalInformationScreen} options={{title: 'Privacidad y términos'}} />
 
       <Stack.Screen
         name="MyCourseDetail"

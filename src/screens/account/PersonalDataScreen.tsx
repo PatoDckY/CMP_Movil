@@ -68,7 +68,7 @@ const SEX_OPTIONS = [
 export function PersonalDataScreen():
     React.JSX.Element {
     const {
-        restoreSession,
+        updateProfile,
     } = useSession();
 
     const {
@@ -83,6 +83,7 @@ export function PersonalDataScreen():
         saveProfile,
     } = useProfileViewModel(
         profileRepository,
+        updateProfile,
     );
 
     useEffect(() => {
@@ -96,10 +97,6 @@ export function PersonalDataScreen():
         if (!success) {
             return;
         }
-
-        // Actualiza el nombre que aparece
-        // en la pantalla Mi cuenta.
-        await restoreSession();
 
         Alert.alert(
             'Datos actualizados',

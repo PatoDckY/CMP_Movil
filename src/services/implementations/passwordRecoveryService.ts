@@ -1,11 +1,12 @@
 
 import {apiRequest} from '../http/httpClient';
+import {PasswordRecoveryService} from '../contracts/PasswordRecoveryService';
 
 interface PasswordRecoveryResponse {
   message: string;
 }
 
-export const passwordRecoveryService = {
+export const passwordRecoveryService: PasswordRecoveryService = {
   requestPasswordReset(
     email: string,
   ): Promise<PasswordRecoveryResponse> {
@@ -17,6 +18,7 @@ export const passwordRecoveryService = {
           correo: email,
         }),
       },
+      {timeoutMs: 15_000},
     );
   },
 };

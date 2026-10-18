@@ -11,6 +11,7 @@ import {
 } from '@react-navigation/native-stack';
 
 import { LoginScreen } from '../screens/auth/LoginScreen';
+import {LegalInformationScreen} from '../screens/account/LegalInformationScreen';
 import { PasswordRecoveryScreen } from '../screens/auth/PasswordRecoveryScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
 import { CatalogScreen } from '../screens/catalog/CatalogScreen';
@@ -121,6 +122,7 @@ export function PublicNavigator(): React.JSX.Element {
           title: 'Crear cuenta',
         }}
       />
+      <Stack.Screen name="LegalInformation" component={LegalInformationScreen} options={{title: 'Privacidad y términos'}} />
     </Stack.Navigator>
   );
 }

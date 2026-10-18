@@ -30,6 +30,7 @@ type Props = NativeStackScreenProps<
 
 export function RegisterScreen({
   navigation,
+  route,
 }: Props): React.JSX.Element {
   const [
     showPassword,
@@ -159,6 +160,7 @@ export function RegisterScreen({
             onPress: () =>
               navigation.replace(
                 'Login',
+                route.params,
               ),
           },
         ],
@@ -167,6 +169,7 @@ export function RegisterScreen({
   }, [
     message,
     navigation,
+    route.params,
     state,
   ]);
 
@@ -520,6 +523,8 @@ export function RegisterScreen({
         </View>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={isSendingOtp ? 'Enviando código' : otpSent ? 'Reenviar código' : 'Enviar código'}
           style={({pressed}) => [
             styles.loginButton,
             pressed &&
@@ -885,6 +890,8 @@ export function RegisterScreen({
         </Text>
 
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Ya tengo cuenta: iniciar sesión"
           style={({pressed}) => [
             styles.loginButton,
             pressed &&
@@ -894,6 +901,7 @@ export function RegisterScreen({
           onPress={() =>
             navigation.replace(
               'Login',
+              route.params,
             )
           }>
           <Text

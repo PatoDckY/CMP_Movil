@@ -30,6 +30,7 @@ type Props = NativeStackScreenProps<
 
 export function LoginScreen({
   navigation,
+  route,
 }: Props): React.JSX.Element {
   const [
     showPassword,
@@ -112,6 +113,7 @@ export function LoginScreen({
     ) {
       setAuthenticatedUser(
         result.user,
+        route.params?.purchaseCourseId,
       );
     }
   };
@@ -119,6 +121,7 @@ export function LoginScreen({
   const goToPasswordRecovery = () => {
     navigation.navigate(
       'PasswordRecovery',
+      route.params,
     );
   };
 
@@ -403,6 +406,7 @@ export function LoginScreen({
           onPress={() =>
             navigation.navigate(
               'Register',
+              route.params,
             )
           }>
           <Text
