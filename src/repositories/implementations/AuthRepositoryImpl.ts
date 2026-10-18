@@ -1,4 +1,5 @@
 import {mapUserDtoToModel} from '../../mappers/userMapper';
+import {LogoutError} from '../../models/LogoutError';
 import {
   LoginResult,
   RegisterUserInput,
@@ -22,14 +23,20 @@ type MfaErrorData = {
 interface AuthTokenStorage {
   saveTokens(
     tokens: StoredTokens,
-  ): Promise<void>;
+    expectedVersion?: number,
+  ): Promise<number>;
 
   clearTokens(): Promise<void>;
+  clearTokensForLogout(): Promise<string | null>;
+  getSessionVersion(): number;
+  getAccessToken(): Promise<string | null>;
 }
 
 export class AuthRepositoryImpl
   implements AuthRepository
 {
+  private logoutPromise: Promise<void> | null = null;
+
   constructor(
     private readonly service: AuthService,
     private readonly storage:
@@ -40,6 +47,10 @@ export class AuthRepositoryImpl
     email: string,
     password: string,
   ): Promise<LoginResult> {
+    if (this.logoutPromise) {
+      throw new Error('Espera a que termine el cierre de sesión.');
+    }
+    const version = this.storage.getSessionVersion();
     try {
       const response =
         await this.service.login({
@@ -49,22 +60,36 @@ export class AuthRepositoryImpl
           contrasena: password,
         });
 
+      if (version !== this.storage.getSessionVersion()) {
+        throw new Error('La sesión cambió durante la autenticación.');
+      }
+
+      if (!response || typeof response !== 'object') {
+        throw new Error('La respuesta de autenticación no es válida.');
+      }
       if ('usuario' in response) {
-        await this.storage.saveTokens({
-          accessToken:
-            response.accessToken,
-          refreshToken:
-            response.refreshToken,
-        });
+        const user = mapUserDtoToModel(response.usuario);
+        const savedVersion = await this.storage.saveTokens(
+          {
+            accessToken: response.accessToken,
+            refreshToken: response.refreshToken,
+          },
+          version,
+        );
+
+        if (savedVersion !== this.storage.getSessionVersion()) {
+          throw new Error('La sesión cambió durante la autenticación.');
+        }
 
         return {
           status: 'authenticated',
-          user: mapUserDtoToModel(
-            response.usuario,
-          ),
+          user,
         };
       }
 
+      if (response.requireMfa !== true || typeof response.email !== 'string' || !response.email) {
+        throw new Error('La respuesta de autenticación no es válida.');
+      }
       return {
         status: 'mfa_required',
         email: response.email,
@@ -144,12 +169,20 @@ export class AuthRepositoryImpl
 
   async getCurrentUser():
     Promise<User | null> {
+    const version = this.storage.getSessionVersion();
+    if (
+      !(await this.storage.getAccessToken()) ||
+      version !== this.storage.getSessionVersion()
+    ) {
+      return null;
+    }
     try {
       const response =
         await this.service
           .checkSession();
 
       if (
+        version !== this.storage.getSessionVersion() ||
         !response.ok ||
         !response.usuario
       ) {
@@ -171,11 +204,33 @@ export class AuthRepositoryImpl
     }
   }
 
-  async logout(): Promise<void> {
+  logout(): Promise<void> {
+    if (this.logoutPromise) {
+      return this.logoutPromise;
+    }
+    this.logoutPromise = this.performLogout().finally(() => {
+      this.logoutPromise = null;
+    });
+    return this.logoutPromise;
+  }
+
+  private async performLogout(): Promise<void> {
+    let accessToken: string | null;
     try {
-      await this.service.logout();
-    } finally {
-      await this.storage.clearTokens();
+      accessToken = await this.storage.clearTokensForLogout();
+    } catch (error) {
+      if (error instanceof LogoutError) {
+        throw error;
+      }
+      throw new LogoutError('local');
+    }
+    if (!accessToken) {
+      return;
+    }
+    try {
+      await this.service.logout(accessToken);
+    } catch {
+      throw new LogoutError('remote');
     }
   }
 }

@@ -20,6 +20,7 @@ export const authService: AuthService = {
         method: 'POST',
         body: JSON.stringify(data),
       },
+      {timeoutMs: 15_000},
     );
   },
 
@@ -32,6 +33,7 @@ export const authService: AuthService = {
         method: 'POST',
         body: JSON.stringify(data),
       },
+      {timeoutMs: 15_000},
     );
   },
 
@@ -44,6 +46,7 @@ export const authService: AuthService = {
         method: 'POST',
         body: JSON.stringify(data),
       },
+      {timeoutMs: 15_000},
     );
   },
 
@@ -53,14 +56,17 @@ export const authService: AuthService = {
       {
         method: 'GET',
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
-  async logout(): Promise<void> {
+  async logout(accessToken: string): Promise<void> {
     await apiRequest<{
       message: string;
-    }>('/auth/mobile/logout', {
-      method: 'POST',
-    });
+    }>(
+      '/auth/mobile/logout',
+      {method: 'POST'},
+      {accessToken, timeoutMs: 10_000},
+    );
   },
 };

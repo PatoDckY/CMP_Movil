@@ -1,6 +1,7 @@
 import {
     useCallback,
     useMemo,
+    useRef,
     useState,
 } from 'react';
 
@@ -77,6 +78,7 @@ export function useRegisterViewModel(
 
     const [hasOtpBeenSent, setHasOtpBeenSent,]
         = useState(false);
+    const submittingRef = useRef(false);
 
     const normalizedEmail =
         useMemo(
@@ -177,7 +179,7 @@ export function useRegisterViewModel(
             }
 
             if (
-                phone.trim().length !== 10
+                !/^\d{10}$/.test(phone.trim())
             ) {
                 setError(
                     'Ingresa un teléfono de 10 dígitos.',
@@ -263,10 +265,12 @@ export function useRegisterViewModel(
 
     const sendOtp =
         useCallback(async () => {
+            if (submittingRef.current) { return false; }
             if (!validateBasicData()) {
                 return false;
             }
 
+            submittingRef.current = true;
             try {
                 setState(
                     'sending_otp',
@@ -306,6 +310,8 @@ export function useRegisterViewModel(
                 setState('error');
 
                 return false;
+            } finally {
+                submittingRef.current = false;
             }
         }, [
             firstName,
@@ -316,6 +322,7 @@ export function useRegisterViewModel(
 
     const register =
         useCallback(async () => {
+            if (submittingRef.current) { return false; }
             if (!validateBasicData()) {
                 return false;
             }
@@ -344,6 +351,7 @@ export function useRegisterViewModel(
                 return false;
             }
 
+            submittingRef.current = true;
             try {
                 setState(
                     'registering',
@@ -385,6 +393,8 @@ export function useRegisterViewModel(
                 setState('error');
 
                 return false;
+            } finally {
+                submittingRef.current = false;
             }
         }, [
             acceptTerms,

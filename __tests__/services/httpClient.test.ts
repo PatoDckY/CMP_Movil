@@ -3,6 +3,7 @@ import {
   httpClient,
 } from '../../src/services/http/httpClient';
 import { tokenStorage } from '../../src/services/security/tokenStorage';
+import {deferred} from '../helpers/renderHook';
 
 jest.mock(
   '../../src/services/security/tokenStorage',
@@ -13,6 +14,7 @@ jest.mock(
       updateAccessToken:
         jest.fn(),
       clearTokens: jest.fn(),
+      getSessionVersion: jest.fn(),
     },
   }),
 );
@@ -46,6 +48,7 @@ function createResponse(
 describe('HttpClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockedTokenStorage.getSessionVersion.mockReturnValue(0);
 
     globalThis.fetch =
       fetchMock as typeof fetch;
@@ -60,11 +63,28 @@ describe('HttpClient', () => {
 
     mockedTokenStorage
       .updateAccessToken
-      .mockResolvedValue();
+      .mockResolvedValue(true);
 
     mockedTokenStorage
       .clearTokens
       .mockResolvedValue();
+  });
+
+  test('un timeout mientras lee Keychain no envía la petición cuando la lectura termina tarde', async () => {
+    jest.useFakeTimers();
+    try {
+      const reading = deferred<string | null>();
+      mockedTokenStorage.getAccessToken.mockReturnValueOnce(reading.promise);
+      const request = httpClient.request('/account', {method: 'DELETE'}, {timeoutMs: 100}).catch(error => error);
+      await jest.advanceTimersByTimeAsync(100);
+      expect(await request).toBeInstanceOf(Error);
+      reading.resolve('fixture-token');
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test(
@@ -177,6 +197,7 @@ describe('HttpClient', () => {
           .updateAccessToken,
       ).toHaveBeenCalledWith(
         'access-token-nuevo',
+        0,
       );
 
       const refreshUrl =

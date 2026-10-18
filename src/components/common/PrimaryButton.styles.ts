@@ -1,6 +1,6 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import {colors} from '../../theme/colors';
+import { colors } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
   button: {
@@ -16,6 +16,15 @@ export const styles = StyleSheet.create({
   accentButton: {
     backgroundColor: colors.accent,
   },
+
+  outlineButton: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  outlineLabel: { color: colors.primary },
+  comfortableButton: { minHeight: 56, paddingVertical: 16 },
+  comfortableLabel: { fontSize: 16, fontWeight: '900', textAlign: 'center' },
 
   dangerButton: {
     backgroundColor: 'transparent',
