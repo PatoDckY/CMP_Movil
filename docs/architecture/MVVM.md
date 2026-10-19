@@ -1,5 +1,11 @@
 # Arquitectura de software — SIMG-CMP Móvil
 
+> Estado comprobado al 2026-10-17: Keychain, Bearer, refresh y logout ya están implementados.
+> A17 móvil registra solicitudes mediante DELETE /api/account y HTTP 202; no ejecuta eliminación final.
+> Las secciones históricas que describen autenticación/Proxy como futuros deben leerse junto al
+> [validación integral y evidencia de patrones](../quality/INTEGRAL_VALIDATION.md).
+> HttpClient concentra autenticación; no existe un Proxy independiente.
+
 ## 1. Propósito
 
 La aplicación móvil SIMG-CMP utiliza una arquitectura por capas con

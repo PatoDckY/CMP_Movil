@@ -1,5 +1,14 @@
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
+Documentación de CMP_Movil: [corrección de identidad visual actual](docs/quality/VISUAL_IDENTITY_CORRECTION.md),
+[rediseño institucional](docs/quality/INSTITUTIONAL_REDESIGN.md),
+[validación integral anterior](docs/quality/INTEGRAL_VALIDATION.md),
+[informe del bloque anterior](docs/quality/IMPLEMENTATION_REPORT.md),
+[matriz de cumplimiento](docs/quality/COMPLIANCE_MATRIX.md),
+[matriz de pruebas](docs/quality/TEST_MATRIX.md),
+[contratos del backend](docs/quality/BACKEND_CONTRACTS.md) e
+[integración segura](docs/quality/SAFE_INTEGRATION.md).
+
 # Getting Started
 
 > **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
