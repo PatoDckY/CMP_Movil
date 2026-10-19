@@ -46,6 +46,26 @@ describe('A21/A25 - registro y recuperación con servicios inyectados y plazo de
     );
     expect(fetchMock).not.toHaveBeenCalled();
   });
+  test.each(['login', 'register', 'recovery', 'session', 'otp'])(
+    '%s usa el origen HTTPS estable y conserva el contrato de autenticación', async operation => {
+      (tokenStorage.getAccessToken as jest.Mock).mockResolvedValue('fixture-access');
+      fetchMock.mockResolvedValue({ok: true, status: 200, text: async () => JSON.stringify({message: 'Fixture'})});
+      const paths: Record<string, string> = {
+        login: '/auth/mobile/login', register: '/auth/register', recovery: '/auth/password-reset/request',
+        session: '/auth/check-session', otp: '/auth/send-otp',
+      };
+      if (operation === 'login') {await authService.login({correo: 'fixture@example.com', contrasena: 'fixture-only'});}
+      if (operation === 'register') {await authService.register(registration);}
+      if (operation === 'recovery') {await passwordRecoveryService.requestPasswordReset('fixture@example.com');}
+      if (operation === 'session') {await authService.checkSession();}
+      if (operation === 'otp') {await authService.sendRegistrationOtp({email: 'fixture@example.com', nombre: 'Persona'});}
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [url, options] = fetchMock.mock.calls[0];
+      expect(url).toBe(`https://cmp-site.vercel.app/api${paths[operation]}`);
+      expect(options.method).toBe(operation === 'session' ? 'GET' : 'POST');
+      if (operation === 'session') {expect(new Headers(options.headers).get('Authorization')).toBe('Bearer fixture-access');}
+    },
+  );
   test.each(['otp', 'register', 'recovery'])(
     '%s: servidor sin respuesta no mantiene el proceso pendiente indefinidamente',
     async operation => {
