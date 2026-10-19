@@ -133,3 +133,36 @@ describe('Autorización y progreso académico disponible', () => {
     await vm.unmount();
   });
 });
+
+
+describe('Sesiones y asistencia por inscripción', () => {
+  test('ordena por fecha y hora sin mutar el DTO ni mezclar los registros de sesión', () => {
+    const base = myCourseDto.sesiones[0];
+    const dto = {...myCourseDto, sesiones: [
+      {...base, idSesion: 30, numeroSesion: 3, fecha: '2026-10-20', estadoAsistencia: 'Falta', justificada: true, motivoJustificacion: 'Motivo ficticio'},
+      {...base, idSesion: 20, numeroSesion: 2, fecha: '2026-10-15', horaInicio: '11:00', estadoAsistencia: 'Retardo', minutosRetardo: 7, horaEntrada: '11:07'},
+      {...base, idSesion: 10, numeroSesion: 1, fecha: '2026-10-15', horaInicio: '09:00', estadoAsistencia: 'Sin registro'},
+    ]};
+    const result = mapMyCourseDetailDtoToModel(dto);
+    expect(result.enrollmentId).toBe(dto.idInscripcion);
+    expect(result.sessions.map(session => session.id)).toEqual([10, 20, 30]);
+    expect(dto.sesiones.map(session => session.idSesion)).toEqual([30, 20, 10]);
+    expect(result.sessions[0]).toMatchObject({id: 10, attendanceStatus: 'Sin registro'});
+    expect(result.sessions[1]).toMatchObject({id: 20, attendanceStatus: 'Retardo', lateMinutes: 7, checkInTime: '11:07'});
+    expect(result.sessions[2]).toMatchObject({id: 30, attendanceStatus: 'Falta', justified: true, justificationReason: 'Motivo ficticio'});
+  });
+  test('una nueva consulta borra el detalle anterior mientras espera otra inscripción', async () => {
+    let resolve!: (value: ReturnType<typeof mapMyCourseDetailDtoToModel>) => void;
+    const pending = new Promise<ReturnType<typeof mapMyCourseDetailDtoToModel>>(done => {resolve = done;});
+    const repo = {getMyCourses: jest.fn(), getMyCourseDetail: jest.fn().mockResolvedValueOnce(mapMyCourseDetailDtoToModel(myCourseDto)).mockReturnValueOnce(pending)};
+    const vm = await renderHook(() => useMyCourseDetailViewModel(repo));
+    await act(async () => {await vm.current.loadMyCourseDetail(7);});
+    let request!: Promise<void>;
+    await act(async () => {request = vm.current.loadMyCourseDetail(8);});
+    expect(vm.current.course).toBeNull();
+    expect(vm.current.state).toBe('loading');
+    await act(async () => {resolve(mapMyCourseDetailDtoToModel({...myCourseDto, idInscripcion: 8})); await request;});
+    expect(vm.current.course?.enrollmentId).toBe(8);
+    await vm.unmount();
+  });
+});

@@ -186,8 +186,10 @@ export function mapMyCourseDetailDtoToModel(
       completionDate: dto.fechaFinalizacion,
     },
 
-    sessions: dto.sesiones.map(
-      mapCourseSessionDtoToModel,
+    sessions: dto.sesiones.map(mapCourseSessionDtoToModel).sort((a, b) =>
+      a.date.localeCompare(b.date) ||
+      a.startTime.localeCompare(b.startTime) ||
+      a.number - b.number || a.id - b.id,
     ),
   };
 }

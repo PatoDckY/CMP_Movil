@@ -227,9 +227,6 @@ export function MyCoursesScreen({
             </Text>
 
             {group.enrollments.map(enrollment => {
-              const progress = normalizePercentage(
-                enrollment.progress.progressPercentage,
-              );
               const attendance = normalizePercentage(
                 enrollment.progress.attendancePercentage,
               );
@@ -246,24 +243,6 @@ export function MyCoursesScreen({
                   </Text>
 
                   <View style={styles.progressGrid}>
-                    <View style={styles.progressBox}>
-                      <View style={styles.progressTopRow}>
-                        <Text style={styles.progressLabel}>
-                          Avance
-                        </Text>
-                        <Text style={styles.progressValue}>
-                          {Math.round(progress)}%
-                        </Text>
-                      </View>
-                      <View style={styles.progressTrack}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {width: percentageWidth(progress)},
-                          ]}
-                        />
-                      </View>
-                    </View>
                     <View style={styles.progressBox}>
                       <View style={styles.progressTopRow}>
                         <Text style={styles.progressLabel}>
@@ -358,7 +337,7 @@ export function MyCoursesScreen({
         <Text style={styles.description}>
           Consulta tus inscripciones,
           las fechas de capacitación,
-          el avance académico
+          los materiales del curso
           y la asistencia registrada.
         </Text>
       </View>
@@ -499,7 +478,7 @@ export function MyCoursesScreen({
       {hasCourses && (
         <View style={styles.infoBox}>
           <Text style={styles.infoText}>
-            El avance y la asistencia
+            Las sesiones y la asistencia
             se actualizan según los registros
             académicos de CMP_Site.
           </Text>
