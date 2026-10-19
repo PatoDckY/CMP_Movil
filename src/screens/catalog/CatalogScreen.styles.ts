@@ -268,4 +268,14 @@ export const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75,
   },
+  filters: {padding: 20, gap: 12, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border},
+  filterTitle: {fontSize: 18, fontWeight: '900', color: colors.primary},
+  filterLabel: {fontSize: 14, fontWeight: '700', color: colors.primary},
+  filterOptions: {gap: 10},
+  filterChip: {minHeight: 48, justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.background},
+  filterChipSelected: {backgroundColor: colors.accent, borderColor: colors.primary},
+  filterChipText: {color: colors.primary, fontSize: 14, fontWeight: '700'},
+  priceFilter: {minHeight: 50, padding: 14, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.background, color: colors.text, fontSize: 16},
+  resetFilters: {minHeight: 48, justifyContent: 'center', alignItems: 'flex-start'},
+  filterError: {fontSize: 14, color: colors.error},
 });

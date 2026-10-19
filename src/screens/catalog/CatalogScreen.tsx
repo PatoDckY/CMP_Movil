@@ -1,11 +1,11 @@
 import React, {
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   SectionList,
   Text,
   TextInput,
@@ -29,12 +29,6 @@ type CatalogNavigation =
     'Catalog'
   >;
 
-type CourseGroup = {
-  title: string;
-  count: number;
-  courses: Course[];
-};
-
 type CourseSection = {
   title: string;
   count: number;
@@ -50,12 +44,11 @@ export function CatalogScreen(): React.JSX.Element {
     state,
     error,
     loadCourses,
+    search, setSearch, filters, groupedCourses, categories, modalities,
+    setCategory, setModality, setMaxPrice, clearFilters, hasActiveFilters, filterError,
   } = useCatalogViewModel(
     courseRepository,
   );
-
-  const [search, setSearch] =
-    useState('');
 
   const [
     expandedCategory,
@@ -73,88 +66,15 @@ export function CatalogScreen(): React.JSX.Element {
       .trim()
       .toLocaleLowerCase('es-MX');
 
-  const groupedCourses =
-    useMemo<CourseGroup[]>(() => {
-      const groups =
-        new Map<string, Course[]>();
-
-      courses.forEach(course => {
-        const category =
-          course.categoryName?.trim() ||
-          'Sin categoría';
-
-        const searchableText = [
-          course.title,
-          course.description,
-          course.instructorName,
-          course.modalityName,
-          category,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLocaleLowerCase(
-            'es-MX',
-          );
-
-        if (
-          normalizedSearch &&
-          !searchableText.includes(
-            normalizedSearch,
-          )
-        ) {
-          return;
-        }
-
-        const current =
-          groups.get(category) ?? [];
-
-        current.push(course);
-
-        groups.set(
-          category,
-          current,
-        );
-      });
-
-      return Array.from(
-        groups.entries(),
-      )
-        .sort(([a], [b]) =>
-          a.localeCompare(
-            b,
-            'es',
-          ),
-        )
-        .map(
-          ([
-            title,
-            categoryCourses,
-          ]) => ({
-            title,
-            count:
-              categoryCourses.length,
-            courses: [
-              ...categoryCourses,
-            ].sort((a, b) =>
-              a.title.localeCompare(
-                b.title,
-                'es',
-              ),
-            ),
-          }),
-        );
-    }, [
-      courses,
-      normalizedSearch,
-    ]);
+  const hasCriteria = normalizedSearch.length > 0 || hasActiveFilters;
+  const resetCatalog = () => {clearFilters(); setExpandedCategory(null);};
 
   const sections: CourseSection[] =
     groupedCourses.map(group => ({
       title: group.title,
       count: group.count,
       data:
-        normalizedSearch.length >
-          0 ||
+        hasCriteria ||
         expandedCategory ===
           group.title
           ? group.courses
@@ -276,278 +196,212 @@ export function CatalogScreen(): React.JSX.Element {
     <View style={styles.screen}>
       <SectionList
         sections={sections}
-        keyExtractor={item =>
-          String(item.id)
-        }
-        showsVerticalScrollIndicator={
-          false
-        }
-        stickySectionHeadersEnabled={
-          false
-        }
-        contentContainerStyle={
-          styles.list
-        }
+        keyExtractor={item => String(item.id)}
+        showsVerticalScrollIndicator={false}
+        stickySectionHeadersEnabled={false}
+        contentContainerStyle={styles.list}
         ListHeaderComponent={
           <>
             <View style={styles.hero}>
-              <View
-                style={
-                  styles.heroCircle
-                }
-              />
+              <View style={styles.heroCircle} />
 
-              <Text
-                style={
-                  styles.eyebrow
-                }>
-                CATÁLOGO ACADÉMICO
+              <Text style={styles.eyebrow}>CATÁLOGO ACADÉMICO</Text>
+
+              <Text style={styles.title}>Encuentra el curso ideal para ti</Text>
+
+              <Text style={styles.subtitle}>
+                Consulta la oferta académica, compara opciones y revisa toda la
+                información antes de elegir.
               </Text>
 
-              <Text
-                style={
-                  styles.title
-                }>
-                Encuentra el curso ideal
-                para ti
-              </Text>
-
-              <Text
-                style={
-                  styles.subtitle
-                }>
-                Consulta la oferta
-                académica, compara
-                opciones y revisa toda la
-                información antes de
-                elegir.
-              </Text>
-
-              <View
-                style={
-                  styles.searchBox
-                }>
-                <View
-                  style={
-                    styles.searchSymbol
-                  }>
-                  <Text
-                    style={
-                      styles.searchSymbolText
-                    }>
-                    ⌕
-                  </Text>
+              <View style={styles.searchBox}>
+                <View style={styles.searchSymbol}>
+                  <Text style={styles.searchSymbolText}>⌕</Text>
                 </View>
 
                 <TextInput
-                  style={
-                    styles.searchInput
-                  }
+                  accessibilityLabel="Buscar cursos"
+                  style={styles.searchInput}
                   value={search}
-                  onChangeText={
-                    setSearch
-                  }
+                  onChangeText={setSearch}
                   placeholder="Buscar curso..."
-                  placeholderTextColor={
-                    colors.textSecondary
-                  }
+                  placeholderTextColor={colors.textSecondary}
                   autoCorrect={false}
                 />
 
-                {search.length >
-                  0 && (
+                {search.length > 0 && (
                   <Pressable
-                    style={
-                      styles.clearButton
-                    }
-                    onPress={() =>
-                      setSearch('')
-                    }>
-                    <Text
-                      style={
-                        styles.clearButtonText
-                      }>
-                      ×
-                    </Text>
+                    accessibilityRole="button"
+                    accessibilityLabel="Limpiar búsqueda"
+                    style={styles.clearButton}
+                    onPress={() => setSearch('')}
+                  >
+                    <Text style={styles.clearButtonText}>×</Text>
                   </Pressable>
                 )}
               </View>
 
-              <View
-                style={styles.stats}>
-                <View
-                  style={
-                    styles.statItem
-                  }>
-                  <Text
-                    style={
-                      styles.statNumber
-                    }>
-                    {courses.length}
-                  </Text>
+              <View style={styles.stats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{courses.length}</Text>
 
-                  <Text
-                    style={
-                      styles.statLabel
-                    }>
-                    Cursos
-                  </Text>
+                  <Text style={styles.statLabel}>Cursos</Text>
                 </View>
 
-                <View
-                  style={
-                    styles.statDivider
-                  }
-                />
+                <View style={styles.statDivider} />
 
-                <View
-                  style={
-                    styles.statItem
-                  }>
-                  <Text
-                    style={
-                      styles.statNumber
-                    }>
-                    {
-                      groupedCourses.length
-                    }
-                  </Text>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{groupedCourses.length}</Text>
 
-                  <Text
-                    style={
-                      styles.statLabel
-                    }>
-                    Categorías
-                  </Text>
+                  <Text style={styles.statLabel}>Categorías</Text>
                 </View>
               </View>
             </View>
 
-            <View
-              style={
-                styles.catalogIntro
-              }>
-              <Text
-                style={
-                  styles.catalogIntroTitle
-                }>
+            <View style={styles.filters}>
+              <Text accessibilityRole="header" style={styles.filterTitle}>
+                Filtrar cursos
+              </Text>
+              <Text style={styles.filterLabel}>Categoría</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterOptions}
+              >
+                {[
+                  { id: null, name: 'Todas las categorías' },
+                  ...categories,
+                ].map(option => (
+                  <Pressable
+                    key={String(option.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.name}
+                    accessibilityState={{
+                      selected: (filters.categoryId ?? null) === option.id,
+                    }}
+                    onPress={() => setCategory(option.id)}
+                    style={[
+                      styles.filterChip,
+                      (filters.categoryId ?? null) === option.id &&
+                        styles.filterChipSelected,
+                    ]}
+                  >
+                    <Text style={styles.filterChipText}>{option.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <Text style={styles.filterLabel}>Modalidad</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filterOptions}
+              >
+                {[
+                  { id: null, name: 'Todas las modalidades' },
+                  ...modalities,
+                ].map(option => (
+                  <Pressable
+                    key={String(option.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={option.name}
+                    accessibilityState={{
+                      selected: (filters.modalityId ?? null) === option.id,
+                    }}
+                    onPress={() => setModality(option.id)}
+                    style={[
+                      styles.filterChip,
+                      (filters.modalityId ?? null) === option.id &&
+                        styles.filterChipSelected,
+                    ]}
+                  >
+                    <Text style={styles.filterChipText}>{option.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+              <Text style={styles.filterLabel}>Precio máximo (MXN)</Text>
+              <TextInput
+                accessibilityLabel="Precio máximo en pesos mexicanos"
+                keyboardType="decimal-pad"
+                value={filters.maxPrice ?? ''}
+                onChangeText={setMaxPrice}
+                placeholder="Sin límite de precio"
+                placeholderTextColor={colors.textSecondary}
+                style={styles.priceFilter}
+              />
+              {filterError ? (
+                <Text accessibilityRole="alert" style={styles.filterError}>
+                  {filterError}
+                </Text>
+              ) : null}
+              {hasCriteria ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Limpiar búsqueda y filtros"
+                  onPress={resetCatalog}
+                  style={styles.resetFilters}
+                >
+                  <Text style={styles.filterChipText}>
+                    Limpiar búsqueda y filtros
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <View style={styles.catalogIntro}>
+              <Text style={styles.catalogIntroTitle}>
                 Explora por categoría
               </Text>
 
-              <Text
-                style={
-                  styles.catalogIntroText
-                }>
-                Toca una categoría para
-                consultar sus cursos.
+              <Text style={styles.catalogIntroText}>
+                Toca una categoría para consultar sus cursos.
               </Text>
             </View>
 
-            {normalizedSearch.length >
-              0 && (
-              <View
-                style={
-                  styles.searchResultInfo
-                }>
-                <Text
-                  style={
-                    styles.searchResultText
-                  }>
-                  Resultados para
-                </Text>
+            {normalizedSearch.length > 0 && (
+              <View style={styles.searchResultInfo}>
+                <Text style={styles.searchResultText}>Resultados para</Text>
 
-                <Text
-                  style={
-                    styles.searchResultValue
-                  }>
-                  “{search.trim()}”
-                </Text>
+                <Text style={styles.searchResultValue}>“{search.trim()}”</Text>
               </View>
             )}
           </>
         }
         ListEmptyComponent={
-          normalizedSearch.length >
-          0 ? (
-            <View
-              style={
-                styles.emptySearch
-              }>
-              <View
-                style={
-                  styles.emptySearchIcon
-                }>
-                <Text
-                  style={
-                    styles.emptySearchIconText
-                  }>
-                  ?
-                </Text>
+          hasCriteria ? (
+            <View style={styles.emptySearch}>
+              <View style={styles.emptySearchIcon}>
+                <Text style={styles.emptySearchIconText}>?</Text>
               </View>
 
-              <Text
-                style={
-                  styles.emptySearchTitle
-                }>
-                Sin resultados
+              <Text style={styles.emptySearchTitle}>Sin resultados</Text>
+
+              <Text style={styles.emptySearchText}>
+                No encontramos cursos con los criterios seleccionados.
               </Text>
 
-              <Text
-                style={
-                  styles.emptySearchText
-                }>
-                No encontramos cursos
-                relacionados con
-                “{search.trim()}”.
-              </Text>
-
-              <Pressable
-                onPress={() =>
-                  setSearch('')
-                }>
-                <Text
-                  style={
-                    styles.clearSearchLink
-                  }>
-                  Limpiar búsqueda
+              <Pressable onPress={() => resetCatalog()}>
+                <Text style={styles.clearSearchLink}>
+                  Limpiar búsqueda y filtros
                 </Text>
               </Pressable>
             </View>
           ) : undefined
         }
-        renderSectionHeader={({
-          section,
-        }) => {
-          const expanded =
-            normalizedSearch.length >
-              0 ||
-            expandedCategory ===
-              section.title;
+        renderSectionHeader={({ section }) => {
+          const expanded = hasCriteria || expandedCategory === section.title;
 
           return (
             <CategoryCard
               title={section.title}
               count={section.count}
               expanded={expanded}
-              disabled={
-                normalizedSearch.length >
-                0
-              }
-              onPress={() =>
-                toggleCategory(
-                  section.title,
-                )
-              }
+              disabled={hasCriteria}
+              onPress={() => toggleCategory(section.title)}
             />
           );
         }}
-        renderItem={({item}) => (
-          <CourseCard
-            course={item}
-            onPress={() =>
-              openCourse(item.id)
-            }
-          />
+        renderItem={({ item }) => (
+          <CourseCard course={item} onPress={() => openCourse(item.id)} />
         )}
       />
     </View>

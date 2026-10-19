@@ -15,6 +15,8 @@ export function RootNavigator(): React.JSX.Element {
   const {
     isAuthenticated,
     isRestoring,
+    user,
+    initialPurchaseCourseId,
   } = useSession();
 
   if (isRestoring) {
@@ -32,9 +34,24 @@ export function RootNavigator(): React.JSX.Element {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      key={user?.id ?? 'public'}
+      initialState={
+        isAuthenticated && initialPurchaseCourseId
+          ? {
+              index: 1,
+              routes: [
+                {name: 'Home'},
+                {
+                  name: 'CreatePurchase',
+                  params: {courseId: initialPurchaseCourseId},
+                },
+              ],
+            }
+          : undefined
+      }>
       {isAuthenticated ? (
-        <AuthenticatedNavigator />
+        <AuthenticatedNavigator key={user?.id} />
       ) : (
         <PublicNavigator />
       )}

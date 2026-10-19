@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import {
     LoginResult,
@@ -19,6 +19,7 @@ export function useLoginViewModel(
     const [email, setEmail] = useState('');
     const [password, setPassword] =
         useState('');
+    const submittingRef = useRef(false);
 
     const [state, setState] =
         useState<LoginState>('idle');
@@ -75,10 +76,12 @@ export function useLoginViewModel(
 
     const login =
         useCallback(async (): Promise<LoginResult | null> => {
+            if (submittingRef.current) { return null; }
             if (!validate()) {
                 return null;
             }
 
+            submittingRef.current = true;
             try {
                 setState('loading');
                 setError(null);
@@ -116,6 +119,8 @@ export function useLoginViewModel(
                 setState('error');
 
                 return null;
+            } finally {
+                submittingRef.current = false;
             }
         }, [
             email,

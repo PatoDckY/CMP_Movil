@@ -16,6 +16,14 @@ import {
 export function mapProfileDtoToModel(
   dto: ProfileDto,
 ): Profile {
+  if (!dto || !Number.isSafeInteger(dto.id) || dto.id <= 0 ||
+      typeof dto.nombre !== 'string' || typeof dto.apellidoPaterno !== 'string' ||
+      (dto.apellidoMaterno !== null && typeof dto.apellidoMaterno !== 'string') ||
+      typeof dto.edad !== 'number' || !Number.isFinite(dto.edad) ||
+      typeof dto.sexo !== 'string' || typeof dto.telefono !== 'string' ||
+      typeof dto.correo !== 'string') {
+    throw new Error('El servidor no devolvió un perfil válido.');
+  }
   return {
     id: dto.id,
     firstName: dto.nombre,

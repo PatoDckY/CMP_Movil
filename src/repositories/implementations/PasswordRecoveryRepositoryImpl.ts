@@ -1,24 +1,14 @@
+import { PasswordRecoveryRepository } from '../contracts/PasswordRecoveryRepository';
 
-import {
-  PasswordRecoveryRepository,
-} from '../contracts/PasswordRecoveryRepository';
-
-import {
-  passwordRecoveryService,
-} from '../../services/implementations/passwordRecoveryService';
+import { PasswordRecoveryService } from '../../services/contracts/PasswordRecoveryService';
 
 export class PasswordRecoveryRepositoryImpl
   implements PasswordRecoveryRepository
 {
-  async requestPasswordReset(
-    email: string,
-  ): Promise<void> {
-    const normalizedEmail =
-      email.trim().toLowerCase();
+  constructor(private readonly service: PasswordRecoveryService) {}
+  async requestPasswordReset(email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
 
-    await passwordRecoveryService
-      .requestPasswordReset(
-        normalizedEmail,
-      );
+    await this.service.requestPasswordReset(normalizedEmail);
   }
 }

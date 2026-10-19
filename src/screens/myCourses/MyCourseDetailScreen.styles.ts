@@ -1,19 +1,14 @@
-
-import {StyleSheet} from 'react-native';
-
-import {colors} from '../../theme/colors';
+import { StyleSheet } from 'react-native';
+import { colors } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-
+  screen: { flex: 1, backgroundColor: colors.background },
   container: {
-    padding: 20,
-    paddingBottom: 42,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 32,
+    gap: 20,
   },
-
   center: {
     flex: 1,
     backgroundColor: colors.background,
@@ -21,381 +16,164 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
   },
-
+  errorContainer: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    padding: 20,
+    gap: 16,
+  },
   loadingTitle: {
     color: colors.primary,
-    fontSize: 17,
-    fontWeight: '900',
+    fontSize: 18,
+    fontWeight: '800',
     marginTop: 16,
     textAlign: 'center',
   },
-
   loadingDescription: {
     color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 19,
-    marginTop: 9,
-    marginBottom: 18,
+    fontSize: 14,
+    lineHeight: 22,
+    marginTop: 12,
     textAlign: 'center',
   },
-
   errorTitle: {
     color: colors.primary,
-    fontSize: 19,
-    fontWeight: '900',
+    fontSize: 20,
+    fontWeight: '800',
     textAlign: 'center',
-    marginBottom: 10,
   },
-
   errorText: {
     color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 20,
+    fontSize: 14,
+    lineHeight: 22,
     textAlign: 'center',
-    marginBottom: 18,
   },
-
-  actionContainer: {
-    width: '100%',
-    marginTop: 10,
-  },
-
-  header: {
-    marginBottom: 20,
-  },
-
-  eyebrow: {
-    color: colors.textSecondary,
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 1.1,
-  },
-
-  title: {
-    color: colors.primary,
-    fontSize: 27,
-    fontWeight: '900',
-    marginTop: 4,
-  },
-
-  description: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 19,
-    marginTop: 8,
-  },
-
   hero: {
     backgroundColor: colors.primary,
     borderRadius: 20,
-    padding: 19,
-    minHeight: 175,
-    justifyContent: 'space-between',
-    marginBottom: 15,
+    padding: 20,
+    gap: 12,
   },
-
-  heroBadges: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 9,
+  eyebrow: {
+    color: colors.primarySoft,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
-
+  heroBadges: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   categoryBadge: {
     backgroundColor: colors.primaryLight,
-    borderRadius: 9,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    maxWidth: '55%',
+    borderRadius: 10,
+    padding: 10,
+    maxWidth: '100%',
   },
-
   categoryText: {
     color: colors.surface,
-    fontSize: 10,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
+    flexShrink: 1,
   },
-
   situationBadge: {
     backgroundColor: colors.accentSoft,
     borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    maxWidth: '45%',
+    padding: 10,
+    maxWidth: '100%',
   },
-
   situationText: {
     color: colors.primary,
-    fontSize: 10,
-    fontWeight: '900',
-    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '800',
+    flexShrink: 1,
   },
-
   heroTitle: {
     color: colors.surface,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '900',
-    lineHeight: 29,
-    marginTop: 25,
+    flexShrink: 1,
   },
-
-  heroSubtitle: {
-    color: colors.primarySoft,
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-
-  enrollmentBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.primarySoft,
-    borderRadius: 9,
-    paddingVertical: 7,
-    paddingHorizontal: 11,
-    marginBottom: 15,
-  },
-
-  enrollmentText: {
-    color: colors.primary,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-
+  heroSubtitle: { color: colors.primarySoft, fontSize: 14, lineHeight: 22 },
   section: {
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 18,
     padding: 16,
-    marginBottom: 15,
+    gap: 12,
   },
-
+  sectionTitle: {
+    color: colors.primary,
+    fontSize: 18,
+    fontWeight: '800',
+    flexShrink: 1,
+  },
   bodyText: {
     color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 20,
-    marginTop: 10,
-  },
-
-  participantPanel: {
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 13,
-  },
-
-  participantLabel: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-
-  participantName: {
-    color: colors.primary,
-    fontSize: 16,
-    fontWeight: '900',
-    marginTop: 6,
-  },
-
-  participantContact: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    marginTop: 7,
-    lineHeight: 18,
-  },
-
-  progressRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
-
-  progressCard: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: 12,
-  },
-
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 5,
-    marginBottom: 10,
-  },
-
-  progressLabel: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-
-  progressValue: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '900',
-  },
-
-  progressTrack: {
-    backgroundColor: colors.border,
-    borderRadius: 6,
-    height: 8,
-    overflow: 'hidden',
-  },
-
-  progressFill: {
-    backgroundColor: colors.primary,
-    height: '100%',
-    borderRadius: 6,
-  },
-
-  attendanceFill: {
-    backgroundColor: colors.success,
-    height: '100%',
-    borderRadius: 6,
-  },
-
-  academicPanel: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 14,
-  },
-
-  academicLabel: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    fontWeight: '800',
-  },
-
-  academicValue: {
-    color: colors.primary,
     fontSize: 14,
-    fontWeight: '900',
-    marginTop: 5,
+    lineHeight: 22,
+    flexShrink: 1,
   },
-
   sessionCard: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 14,
     padding: 14,
-    marginTop: 12,
-  },
-
-  sessionTop: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     gap: 10,
   },
-
+  sessionTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   sessionNumber: {
     backgroundColor: colors.primarySoft,
-    borderRadius: 11,
-    height: 37,
-    width: 37,
+    borderRadius: 10,
+    minWidth: 40,
+    minHeight: 40,
+    padding: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0,
   },
-
-  sessionNumberText: {
-    color: colors.primary,
-    fontWeight: '900',
-    fontSize: 14,
-  },
-
-  sessionInformation: {
-    flex: 1,
-  },
-
+  sessionNumberText: { color: colors.primary, fontWeight: '800', fontSize: 14 },
+  sessionInformation: { flex: 1, minWidth: 0, gap: 6 },
   sessionTitle: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: '900',
-    lineHeight: 20,
+    fontSize: 15,
+    lineHeight: 23,
+    fontWeight: '800',
+    flexShrink: 1,
   },
-
-  sessionStatus: {
-    color: colors.textSecondary,
-    fontSize: 10,
-    fontWeight: '700',
-    marginTop: 5,
-  },
-
-  sessionLine: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    lineHeight: 18,
-    marginTop: 9,
-  },
-
+  sessionStatus: { color: colors.textSecondary, fontSize: 13, lineHeight: 21 },
   attendancePanel: {
     backgroundColor: colors.background,
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 12,
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
   },
-
-  attendanceTitle: {
+  attendanceStatus: {
     color: colors.primary,
-    fontSize: 11,
-    fontWeight: '900',
+    fontSize: 14,
+    lineHeight: 22,
+    fontWeight: '700',
   },
-
-  attendanceText: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    lineHeight: 18,
-    marginTop: 6,
-  },
-
   virtualButton: {
     backgroundColor: colors.primary,
-    borderRadius: 11,
-    minHeight: 44,
+    borderRadius: 12,
+    minHeight: 48,
+    padding: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 13,
-    paddingHorizontal: 12,
   },
-
   virtualButtonText: {
     color: colors.surface,
-    fontWeight: '900',
-    fontSize: 12,
+    fontWeight: '800',
+    fontSize: 14,
+    textAlign: 'center',
+    flexShrink: 1,
   },
-
-  emptySessions: {
+  emptyText: {
     backgroundColor: colors.background,
     borderRadius: 12,
-    padding: 17,
-    marginTop: 12,
-  },
-
-  emptySessionsText: {
+    padding: 14,
     color: colors.textSecondary,
-    fontSize: 12,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
-
-  refreshButton: {
-    alignSelf: 'center',
-    padding: 13,
-    marginTop: 4,
-    marginBottom: 12,
-  },
-
-  refreshText: {
-    color: colors.primary,
-    fontSize: 12,
-    fontWeight: '800',
-  },
-
-  footerButton: {
-    marginTop: 6,
-    marginBottom: 15,
+    fontSize: 14,
+    lineHeight: 22,
   },
 });

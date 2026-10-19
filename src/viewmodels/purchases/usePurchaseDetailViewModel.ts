@@ -1,3 +1,4 @@
+import {amountToCents, isValidPaymentDate} from '../../models/purchaseValidation';
 
 import {
   useCallback,
@@ -27,37 +28,6 @@ export type PaymentReportState =
   | 'submitting'
   | 'success'
   | 'error';
-
-function amountToCents(
-  value: string,
-): number | null {
-  const match =
-    /^(\d+)(?:\.(\d{1,2}))?$/.exec(
-      value.trim(),
-    );
-
-  if (!match) {
-    return null;
-  }
-
-  const pesos = Number(match[1]);
-
-  const centavos = Number(
-    (match[2] ?? '').padEnd(2, '0'),
-  );
-
-  const total =
-    pesos * 100 + centavos;
-
-  if (
-    !Number.isSafeInteger(total) ||
-    total < 0
-  ) {
-    return null;
-  }
-
-  return total;
-}
 
 function centsToAmount(
   cents: number,
@@ -114,6 +84,7 @@ export function usePurchaseDetailViewModel(
   const mountedRef = useRef(true);
 
   const submittingRef = useRef(false);
+  const completedReport = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -158,6 +129,9 @@ export function usePurchaseDetailViewModel(
           return;
         }
 
+        completedReport.current = false;
+        setReportState('idle');
+        setReportError(null);
         setDetail(result);
         setState('success');
         setRefreshWarning(null);
@@ -202,6 +176,10 @@ export function usePurchaseDetailViewModel(
       input: ReportPaymentInput,
     ): Promise<boolean> => {
       if (submittingRef.current) {
+        return false;
+      }
+      if (completedReport.current) {
+        setReportError('El reporte ya fue aceptado. Consulta nuevamente el detalle antes de enviar otro.');
         return false;
       }
 
@@ -333,11 +311,7 @@ export function usePurchaseDetailViewModel(
         input.paymentDate,
       );
 
-      if (
-        !Number.isFinite(paymentDate) ||
-        paymentDate >
-          Date.now() + 5 * 60 * 1000
-      ) {
+      if (!isValidPaymentDate(input.paymentDate)) {
         return fail(
           'La fecha del pago no es válida o está en el futuro.',
         );
@@ -524,6 +498,7 @@ export function usePurchaseDetailViewModel(
       };
 
       submittingRef.current = true;
+      const reportRequestId = requestId.current;
       setReportState('submitting');
       setReportError(null);
 
@@ -534,9 +509,10 @@ export function usePurchaseDetailViewModel(
             payload,
           );
 
-        if (!mountedRef.current) {
+        if (!mountedRef.current || reportRequestId !== requestId.current) {
           return true;
         }
+        completedReport.current = true;
 
         setLastReportedPayment(
           registeredPayment,
@@ -575,6 +551,7 @@ export function usePurchaseDetailViewModel(
 
         return true;
       } catch (err) {
+        if (!mountedRef.current || reportRequestId !== requestId.current) {return false;}
         return fail(
           err instanceof Error
             ? `${err.message}. Verifica el historial antes de reintentar para evitar reportes duplicados.`

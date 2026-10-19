@@ -1,3 +1,4 @@
+import {validatePurchase} from '../../models/purchaseValidation';
 
 import {useCallback, useRef, useState} from 'react';
 
@@ -13,72 +14,6 @@ export type PurchaseState =
   | 'loading'
   | 'success'
   | 'error';
-
-function validatePurchase(
-  data: CreatePurchaseInput,
-): string | null {
-  if (
-    !Number.isSafeInteger(data.courseId) ||
-    data.courseId <= 0
-  ) {
-    return 'Selecciona un curso válido.';
-  }
-
-  if (
-    !Number.isSafeInteger(data.quantity) ||
-    data.quantity < 1 ||
-    data.quantity > 20
-  ) {
-    return 'La cantidad de cupos debe estar entre 1 y 20.';
-  }
-
-  if (
-    !Array.isArray(data.participants) ||
-    data.participants.length !== data.quantity
-  ) {
-    return 'Debe existir un participante por cada cupo.';
-  }
-
-  const existingIds = new Set<number>();
-
-  for (let i = 0; i < data.participants.length; i++) {
-    const item = data.participants[i];
-
-    if ('participantId' in item) {
-      if (
-        !Number.isSafeInteger(item.participantId) ||
-        item.participantId <= 0
-      ) {
-        return `El participante ${i + 1} no es válido.`;
-      }
-
-      if (existingIds.has(item.participantId)) {
-        return 'No puedes seleccionar dos veces al mismo participante.';
-      }
-
-      existingIds.add(item.participantId);
-      continue;
-    }
-
-    const participant = item.participant;
-
-    if (
-      !participant.firstName.trim() ||
-      !participant.paternalLastName.trim()
-    ) {
-      return `Completa el nombre y apellido paterno del participante ${i + 1}.`;
-    }
-  }
-
-  if (
-    data.userNotes !== null &&
-    data.userNotes.length > 1000
-  ) {
-    return 'Las observaciones no deben superar los 1000 caracteres.';
-  }
-
-  return null;
-}
 
 export function usePurchaseViewModel(
   repository: PurchaseRepository,
@@ -115,7 +50,7 @@ export function usePurchaseViewModel(
         validatePurchase(data);
 
       if (validationError) {
-        setError(validationError);
+        setError(validationError.message);
         setState('error');
         return null;
       }
@@ -139,8 +74,8 @@ export function usePurchaseViewModel(
       } catch (err) {
         setError(
           err instanceof Error
-            ? err.message
-            : 'No fue posible crear la compra.',
+            ? `${err.message} Consulta el historial antes de reintentar para evitar reservas duplicadas.`
+            : 'No fue posible confirmar la compra. Consulta el historial antes de reintentar.',
         );
 
         setState('error');

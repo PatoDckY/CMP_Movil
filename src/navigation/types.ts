@@ -10,9 +10,10 @@ export type CourseFlowParamList = {
 export type PublicStackParamList =
   CourseFlowParamList & {
     Home: undefined;
-    Login: undefined;
-    Register: undefined;
-    PasswordRecovery: undefined;
+    Login: {purchaseCourseId?: number} | undefined;
+    Register: {purchaseCourseId?: number} | undefined;
+    PasswordRecovery: {purchaseCourseId?: number} | undefined;
+    LegalInformation: undefined;
   };
 
 export type AuthenticatedStackParamList =
@@ -37,4 +38,6 @@ export type AuthenticatedStackParamList =
 
     // A17 - Acceso y Rectificación.
     PersonalData: undefined;
+    AccountDeletion: undefined;
+    LegalInformation: undefined;
   };

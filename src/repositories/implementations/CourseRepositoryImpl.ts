@@ -13,7 +13,10 @@ export class CourseRepositoryImpl implements CourseRepository {
   }
 
   async getCourseById(id: number): Promise<Course> {
+    if (!Number.isSafeInteger(id) || id <= 0) {throw new Error('El identificador del curso no es válido.');}
     const courseDto = await this.courseService.getCourseById(id);
+
+    if (courseDto?.idCurso !== id) {throw new Error('El servidor no confirmó la información del curso seleccionado.');}
 
     return mapCourseDtoToModel(courseDto);
   }

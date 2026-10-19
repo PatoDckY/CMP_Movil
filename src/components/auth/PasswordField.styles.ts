@@ -1,6 +1,6 @@
-import {StyleSheet} from 'react-native';
+import { StyleSheet } from 'react-native';
 
-import {colors} from '../../theme/colors';
+import { colors } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
   container: {
@@ -33,4 +33,15 @@ export const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '900',
   },
+
+  comfortableContainer: { height: 'auto', minHeight: 56, flexWrap: 'wrap' },
+  comfortableInput: {
+    height: 'auto',
+    minHeight: 56,
+    minWidth: 120,
+    fontSize: 16,
+    paddingVertical: 14,
+  },
+  comfortableToggle: { fontSize: 14 },
+  comfortableShowButton: { height: 'auto', minHeight: 48, paddingVertical: 14 },
 });

@@ -72,6 +72,7 @@ export function useMyCourseDetailViewModel(
       }
 
       try {
+        setCourse(null);
         setState('loading');
         setError(null);
 

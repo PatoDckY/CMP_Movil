@@ -9,6 +9,9 @@ describe('AuthRepositoryImpl', () => {
   let storage: {
     saveTokens: jest.Mock;
     clearTokens: jest.Mock;
+    clearTokensForLogout: jest.Mock;
+    getSessionVersion: jest.Mock;
+    getAccessToken: jest.Mock;
   };
 
   const userDto = {
@@ -33,9 +36,13 @@ describe('AuthRepositoryImpl', () => {
       logout: jest.fn(),
     };
 
+    let storageVersion = 0;
     storage = {
-      saveTokens: jest.fn(),
+      saveTokens: jest.fn(async () => ++storageVersion),
       clearTokens: jest.fn(),
+      clearTokensForLogout: jest.fn().mockResolvedValue('access-token-test'),
+      getSessionVersion: jest.fn(() => storageVersion),
+      getAccessToken: jest.fn().mockResolvedValue('access-token-test'),
     };
 
     repository =
@@ -84,7 +91,7 @@ describe('AuthRepositoryImpl', () => {
           'access-token-test',
         refreshToken:
           'refresh-token-test',
-      });
+      }, 0);
 
       expect(
         storage.saveTokens,
@@ -328,7 +335,7 @@ describe('AuthRepositoryImpl', () => {
       );
 
       expect(
-        storage.clearTokens,
+        storage.clearTokensForLogout,
       ).toHaveBeenCalledTimes(
         1,
       );
@@ -352,11 +359,11 @@ describe('AuthRepositoryImpl', () => {
       await expect(
         repository.logout(),
       ).rejects.toThrow(
-        'Error del servidor',
+        'La sesión local se cerró',
       );
 
       expect(
-        storage.clearTokens,
+        storage.clearTokensForLogout,
       ).toHaveBeenCalledTimes(
         1,
       );

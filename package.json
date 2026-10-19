@@ -7,7 +7,9 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test:ci": "jest --ci --runInBand --coverage"
   },
   "dependencies": {
     "@react-native-clipboard/clipboard": "^1.16.3",
@@ -47,6 +49,6 @@
     "typescript": "^6.0.3"
   },
   "engines": {
-    "node": ">= 22.11.0"
+    "node": "^22.13.0 || ^24.3.0 || >=26.0.0"
   }
 }

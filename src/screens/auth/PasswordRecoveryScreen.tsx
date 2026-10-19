@@ -24,6 +24,7 @@ type Props = NativeStackScreenProps<
 
 export function PasswordRecoveryScreen({
   navigation,
+  route,
 }: Props): React.JSX.Element {
   const {
     email,
@@ -42,7 +43,7 @@ export function PasswordRecoveryScreen({
   };
 
   const goToLogin = () => {
-    navigation.navigate('Login');
+    navigation.navigate('Login', route.params);
   };
 
   return (
@@ -127,6 +128,7 @@ export function PasswordRecoveryScreen({
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel="Volver a iniciar sesión"
             style={({pressed}) => [
               styles.primaryButton,
               pressed && styles.pressed,
@@ -188,6 +190,7 @@ export function PasswordRecoveryScreen({
           <Pressable
             accessibilityRole="button"
             disabled={isLoading}
+            accessibilityLabel={isLoading ? 'Enviando solicitud de recuperación' : 'Solicitar recuperación de contraseña'}
             style={({pressed}) => [
               styles.primaryButton,
               pressed &&
@@ -239,6 +242,7 @@ export function PasswordRecoveryScreen({
               styles.backButton,
               pressed && styles.pressed,
             ]}
+            accessibilityLabel="Volver a iniciar sesión"
             onPress={goToLogin}>
             <Text style={styles.backButtonText}>
               ← Regresar al inicio de sesión

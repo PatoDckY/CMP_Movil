@@ -245,6 +245,9 @@ export function HomeScreen({
         </View>
 
         <AppFooter variant="home" />
+        <Pressable accessibilityRole="button" accessibilityLabel="Consultar privacidad y términos" onPress={() => navigation.navigate('LegalInformation')}>
+          <Text style={styles.registerLink}>Privacidad y términos</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

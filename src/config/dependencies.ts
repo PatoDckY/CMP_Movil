@@ -2,6 +2,21 @@
 import {
   RepositoryFactory,
 } from '../factories/RepositoryFactory';
+import {AccountRepositoryImpl} from '../repositories/implementations/AccountRepositoryImpl';
+import {accountService} from '../services/implementations/accountService';
+import {passwordRecoveryService} from '../services/implementations/passwordRecoveryService';
+import {CourseMaterialsRepositoryImpl} from '../repositories/implementations/CourseMaterialsRepositoryImpl';
+import {courseMaterialsService} from '../services/implementations/courseMaterialsService';
+import {tokenStorage} from '../services/security/tokenStorage';
+import {sessionEvents} from '../services/security/sessionEvents';
+
+export const courseMaterialsRepository = new CourseMaterialsRepositoryImpl(courseMaterialsService);
+export const courseMaterialsSessionScope = {
+  version: tokenStorage.getSessionVersion,
+  subscribe: sessionEvents.subscribe,
+};
+
+export const accountRepository = new AccountRepositoryImpl(accountService);
 
 import {
   CourseRepositoryImpl,
@@ -73,7 +88,7 @@ export const myCoursesRepository =
  * Repositorio de recuperación de contraseña.
  */
 export const passwordRecoveryRepository =
-  new PasswordRecoveryRepositoryImpl();
+  new PasswordRecoveryRepositoryImpl(passwordRecoveryService);
 
 /**
  * A17 - Derechos ARCO.

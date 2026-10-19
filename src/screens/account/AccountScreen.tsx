@@ -1,294 +1,129 @@
-
 import React from 'react';
-
+import { Alert, ScrollView, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
-  Alert,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+  AccountAction,
+  AccountSection,
+  InstitutionalHeader,
+} from '../../components/account/AccountPresentation';
+import { AppFooter } from '../../components/common/AppFooter';
+import { PrimaryButton } from '../../components/common/PrimaryButton';
+import { LogoutError } from '../../models/LogoutError';
+import { AuthenticatedStackParamList } from '../../navigation/types';
+import { useSession } from '../../session/SessionContext';
+import { styles } from './AccountScreen.styles';
 
-import {
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
+type Props = NativeStackScreenProps<AuthenticatedStackParamList, 'Account'>;
 
-import {
-  AppFooter,
-} from '../../components/common/AppFooter';
-
-import {
-  DetailRow,
-} from '../../components/common/DetailRow';
-
-import {
-  InfoCard,
-} from '../../components/common/InfoCard';
-
-import {
-  PrimaryButton,
-} from '../../components/common/PrimaryButton';
-
-import {
-  SectionHeader,
-} from '../../components/common/SectionHeader';
-
-import {
-  AuthenticatedStackParamList,
-} from '../../navigation/types';
-
-import {
-  useSession,
-} from '../../session/SessionContext';
-
-import {
-  styles,
-} from './AccountScreen.styles';
-
-type Props = NativeStackScreenProps<
-  AuthenticatedStackParamList,
-  'Account'
->;
-
-export function AccountScreen({
-  navigation,
-}: Props): React.JSX.Element {
-  const {
-    user,
-    logout,
-  } = useSession();
-
+export function AccountScreen({ navigation }: Props): React.JSX.Element {
+  const { user, logout } = useSession();
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
       Alert.alert(
-        'Error',
-        error instanceof Error
+        error instanceof LogoutError
+          ? error.phase === 'local'
+            ? 'Limpieza local incompleta'
+            : 'Revocación remota no confirmada'
+          : 'Error al cerrar sesión',
+        error instanceof LogoutError
           ? error.message
-          : 'No fue posible cerrar la sesión.',
+          : 'El acceso quedó bloqueado, pero no fue posible confirmar el cierre de sesión.',
       );
     }
   };
 
-  const initial =
-    user?.fullName?.charAt(0).toUpperCase() ??
-    'U';
-
   return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}>
-
-      {/* ENCABEZADO */}
-      <View style={styles.header}>
-        <Text style={styles.eyebrow}>
-          PERFIL
-        </Text>
-
-        <Text style={styles.title}>
-          Mi cuenta
-        </Text>
-
-        <Text style={styles.description}>
-          Consulta la información relacionada con tu perfil
-          y administra el acceso a tu cuenta.
-        </Text>
-      </View>
-
-      {/* TARJETA DEL USUARIO */}
-      <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {initial}
-          </Text>
-        </View>
-
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileEyebrow}>
-            USUARIO
-          </Text>
-
-          <Text style={styles.profileName}>
-            {user?.fullName ??
-              'Usuario autenticado'}
-          </Text>
-
-          <Text style={styles.profileEmail}>
-            {user?.email ??
-              'Correo no disponible'}
-          </Text>
-        </View>
-      </View>
-
-      {/* SECCIÓN 01: INFORMACIÓN */}
-      <View style={styles.section}>
-        <SectionHeader
-          number="01"
-          eyebrow="INFORMACIÓN"
-          title="Datos de la sesión"
-        />
-
-        <DetailRow
-          label="ID de usuario"
-          value={
-            user
-              ? String(user.id)
-              : 'No disponible'
-          }
-        />
-
-        <DetailRow
-          label="Nombre"
-          value={
-            user?.fullName ??
-            'No disponible'
-          }
-        />
-
-        <DetailRow
-          label="Correo electrónico"
-          value={
-            user?.email ??
-            'No disponible'
-          }
-        />
-
-        <DetailRow
-          label="Rol"
-          value={
-            user?.role ??
-            'No disponible'
-          }
-          last
-        />
-      </View>
-
-      {/* SECCIÓN 02: ACTIVIDAD */}
-      <View style={styles.section}>
-        <SectionHeader
-          number="02"
-          eyebrow="ACTIVIDAD"
-          title="Mi formación"
-        />
-
-        <Pressable
-          style={({pressed}) => [
-            styles.optionButton,
-            pressed && styles.pressed,
-          ]}
-          onPress={() =>
-            navigation.navigate('MyCourses')
-          }>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>
-              Mis cursos
-            </Text>
-
-            <Text
-              style={
-                styles.optionDescription
-              }>
-              Consulta los cursos relacionados con tu cuenta.
-            </Text>
-          </View>
-
-          <Text style={styles.optionArrow}>
-            →
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={({pressed}) => [
-            styles.optionButton,
-            pressed && styles.pressed,
-          ]}
-          onPress={() =>
-            navigation.navigate(
-              'PurchaseHistory',
-            )
-          }>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>
-              Historial de compras
-            </Text>
-
-            <Text
-              style={
-                styles.optionDescription
-              }>
-              Revisa las operaciones realizadas.
-            </Text>
-          </View>
-
-          <Text style={styles.optionArrow}>
-            →
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* SECCIÓN 03: DERECHOS ARCO */}
-      <View style={styles.section}>
-        <SectionHeader
-          number="03"
-          eyebrow="PRIVACIDAD"
-          title="Protección de datos personales"
-        />
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Consultar y editar mis datos personales"
-          style={({pressed}) => [
-            styles.optionButton,
-            pressed && styles.pressed,
-          ]}
-          onPress={() =>
-            navigation.navigate(
-              'PersonalData',
-            )
-          }>
-          <View style={styles.optionContent}>
-            <Text style={styles.optionTitle}>
-              Mis datos personales
-            </Text>
-
-            <Text
-              style={
-                styles.optionDescription
-              }>
-              Consulta y rectifica los datos
-              personales asociados a tu cuenta.
-            </Text>
-          </View>
-
-          <Text style={styles.optionArrow}>
-            →
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* INFORMACIÓN DE SEGURIDAD */}
-      <InfoCard
-        icon="S"
-        title="Sesión protegida"
-        description="Tu identidad se obtiene de la sesión autenticada validada por CMP-Site."
+    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+      <InstitutionalHeader
+        title="Mi cuenta"
+        description="Tu información personal, tu formación y las opciones de tu cuenta en un solo lugar."
       />
 
-      {/* CERRAR SESIÓN */}
-      <View style={styles.logoutContainer}>
+      <AccountSection title="Información personal">
+        <View style={styles.profile}>
+          <View accessible={false} style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user?.fullName?.charAt(0).toUpperCase() || 'U'}
+            </Text>
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>
+              {user?.fullName || 'Usuario autenticado'}
+            </Text>
+            <Text selectable style={styles.profileEmail}>
+              {user?.email || 'Correo no disponible'}
+            </Text>
+          </View>
+        </View>
+        <AccountAction
+          title="Mis datos personales"
+          description="Consulta y edita los datos de tu perfil."
+          onPress={() => navigation.navigate('PersonalData')}
+        />
+      </AccountSection>
+
+      <AccountSection title="Mi formación">
+        <AccountAction
+          title="Mis cursos"
+          description="Consulta tus inscripciones y tu actividad académica."
+          onPress={() => navigation.navigate('MyCourses')}
+        />
+        <AccountAction
+          title="Historial de compras"
+          description="Revisa tus solicitudes de compra y reportes de pago."
+          onPress={() => navigation.navigate('PurchaseHistory')}
+        />
+      </AccountSection>
+
+      <AccountSection
+        title="Configuración y privacidad"
+        description="Consulta la información disponible sobre el uso de la aplicación y tus datos."
+      >
+        <AccountAction
+          title="Privacidad y términos"
+          description="Información sobre datos personales, uso de la aplicación y solicitudes de cuenta."
+          onPress={() => navigation.navigate('LegalInformation')}
+        />
+        <View style={styles.sessionNote}>
+          <Text style={styles.noteTitle}>Seguridad de tu sesión</Text>
+          <Text style={styles.text}>
+            Al cerrar sesión se intentan eliminar las credenciales de este
+            dispositivo y revocar el acceso en el servidor.
+          </Text>
+        </View>
         <PrimaryButton
           label="Cerrar sesión"
+          variant="outline"
+          size="comfortable"
           onPress={handleLogout}
-          variant="dangerOutline"
         />
-      </View>
+      </AccountSection>
 
-      <Text style={styles.logoutHelper}>
-        Al cerrar sesión se eliminará la sesión del servidor
-        y volverás al área pública.
-      </Text>
-
+      {user?.role.toLowerCase() === 'cliente' ? (
+        <View style={styles.management} testID="account-management-section">
+          <AccountSection
+            title="Gestión de cuenta"
+            description="Puedes solicitar la eliminación de tu cuenta y la revisión correspondiente de tus datos personales."
+          >
+            <Text style={styles.text}>
+              La solicitud se registra para su revisión. Enviarla no elimina tu
+              cuenta de inmediato.
+            </Text>
+            <PrimaryButton
+              label="Solicitar eliminación de cuenta"
+              variant="outline"
+              size="comfortable"
+              onPress={() => navigation.navigate('AccountDeletion')}
+            />
+            <Text style={styles.helper}>
+              En la siguiente pantalla podrás revisar el proceso y confirmar la
+              solicitud con tu contraseña actual.
+            </Text>
+          </AccountSection>
+        </View>
+      ) : null}
       <AppFooter />
     </ScrollView>
   );

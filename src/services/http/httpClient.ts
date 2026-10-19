@@ -25,6 +25,13 @@ interface RefreshResponse {
   expiresIn: number;
 }
 
+interface RequestPolicy {
+  accessToken?: string;
+  timeoutMs?: number;
+  requireAuthentication?: boolean;
+  expectedStatus?: number;
+}
+
 function getErrorMessage(
   data: unknown,
 ): string {
@@ -64,6 +71,28 @@ async function parseResponse(
   }
 }
 
+async function requestWithTimeout<T>(
+  timeoutMs: number,
+  operation: (signal: AbortSignal) => Promise<T>,
+  message: string,
+): Promise<T> {
+  const controller = new AbortController();
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation(controller.signal),
+      new Promise<never>((_, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error(message));
+          controller.abort();
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export class HttpClient {
   private static instance:
     HttpClient | null = null;
@@ -73,6 +102,7 @@ export class HttpClient {
   private refreshPromise:
     Promise<string | null> | null =
     null;
+  private refreshVersion: number | null = null;
 
   private constructor() {
     this.baseUrl = API_BASE_URL;
@@ -143,33 +173,39 @@ export class HttpClient {
 
   private async refreshAccessToken():
     Promise<string | null> {
-    if (this.refreshPromise) {
+    const version = tokenStorage.getSessionVersion();
+    if (this.refreshPromise && this.refreshVersion === version) {
       return this.refreshPromise;
     }
 
-    this.refreshPromise =
-      this.performRefresh();
+    const operation = this.performRefresh();
+    this.refreshPromise = operation;
+    this.refreshVersion = version;
 
     try {
-      return await this
-        .refreshPromise;
+      return await operation;
     } finally {
-      this.refreshPromise = null;
+      if (this.refreshPromise === operation) {
+        this.refreshPromise = null;
+        this.refreshVersion = null;
+      }
     }
   }
 
   private async performRefresh():
     Promise<string | null> {
+    const version = tokenStorage.getSessionVersion();
     const refreshToken =
       await tokenStorage
         .getRefreshToken();
 
-    if (!refreshToken) {
+    if (!refreshToken || version !== tokenStorage.getSessionVersion()) {
       return null;
     }
 
     try {
-      const response =
+      const {response, data} = await requestWithTimeout(15_000, async signal => {
+        const refreshedResponse =
         await fetch(
           `${this.baseUrl}/auth/mobile/refresh`,
           {
@@ -183,13 +219,15 @@ export class HttpClient {
             body: JSON.stringify({
               refreshToken,
             }),
+            signal,
           },
         );
+        return {response: refreshedResponse, data: await parseResponse(refreshedResponse)};
+      }, 'Se agotó el tiempo de renovación de sesión.');
 
-      const data =
-        await parseResponse(
-          response,
-        );
+      if (version !== tokenStorage.getSessionVersion()) {
+        return null;
+      }
 
       if (!response.ok) {
         if (
@@ -225,14 +263,16 @@ export class HttpClient {
         return null;
       }
 
-      await tokenStorage
+      const updated = await tokenStorage
         .updateAccessToken(
           refreshResponse
             .accessToken,
+          version,
         );
 
-      return refreshResponse
-        .accessToken;
+      return updated && version === tokenStorage.getSessionVersion()
+        ? refreshResponse.accessToken
+        : null;
     } catch {
       /*
        * Un error de red no elimina
@@ -248,17 +288,54 @@ export class HttpClient {
   async request<T>(
     endpoint: string,
     options: RequestInit = {},
+    policy?: RequestPolicy,
   ): Promise<T> {
+    if (policy?.accessToken) {
+      const revocationToken = policy.accessToken;
+      // La revocación usa el token capturado; no lee Keychain ni renueva sesión.
+      return requestWithTimeout(policy.timeoutMs ?? 10_000, async signal => {
+        const response = await this.sendRequest(endpoint, {...options, signal}, revocationToken);
+        const data = await parseResponse(response);
+        if (!response.ok) {
+          throw new ApiError(getErrorMessage(data), response.status, data);
+        }
+        return data as T;
+      }, 'Se agotó el tiempo de revocación remota.');
+    }
+    if (policy?.timeoutMs) {
+      return requestWithTimeout(policy.timeoutMs,
+        signal => this.request<T>(endpoint, {...options, signal}, {...policy, timeoutMs: undefined}),
+        'No fue posible confirmar la respuesta a tiempo.');
+    }
+    const version = tokenStorage.getSessionVersion();
+    const assertCurrentSession = () => {
+      if (options.signal?.aborted) {
+        throw new Error('La operación fue cancelada o superó el tiempo límite.');
+      }
+      if (version !== tokenStorage.getSessionVersion()) {
+        throw new ApiError('La sesión local se cerró.', 401, null);
+      }
+    };
     const accessToken =
       await tokenStorage
         .getAccessToken();
 
+    assertCurrentSession();
+
+    if (policy?.requireAuthentication && !accessToken) {
+      await tokenStorage.clearTokens();
+      throw new ApiError('Se requiere una sesión móvil activa.', 401, null);
+    }
+
+    let refreshed = false;
     let response =
       await this.sendRequest(
         endpoint,
         options,
         accessToken,
       );
+
+    assertCurrentSession();
 
     /*
      * Si el access token expiró,
@@ -275,7 +352,10 @@ export class HttpClient {
         await this
           .refreshAccessToken();
 
+      assertCurrentSession();
+
       if (newAccessToken) {
+        refreshed = true;
         response =
           await this.sendRequest(
             endpoint,
@@ -290,12 +370,26 @@ export class HttpClient {
         response,
       );
 
+    assertCurrentSession();
+
     if (!response.ok) {
+      if (response.status === 401 && accessToken && version === tokenStorage.getSessionVersion()) {
+        const refreshToken = await tokenStorage.getRefreshToken();
+        assertCurrentSession();
+        // Si falló la red durante el refresh se conservan credenciales y contexto.
+        if (refreshed || !refreshToken) {
+          await tokenStorage.clearTokens();
+        }
+      }
       throw new ApiError(
-        getErrorMessage(data),
+        response.status >= 500 ? 'El servidor no pudo completar la operación. Intenta nuevamente más tarde.' : getErrorMessage(data),
         response.status,
         data,
       );
+    }
+
+    if (policy?.expectedStatus !== undefined && response.status !== policy.expectedStatus) {
+      throw new ApiError('No fue posible verificar la aceptación de la solicitud.', response.status, null);
     }
 
     return data as T;
@@ -308,9 +402,11 @@ export const httpClient =
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
+  policy?: RequestPolicy,
 ): Promise<T> {
   return httpClient.request<T>(
     endpoint,
     options,
+    policy,
   );
 }

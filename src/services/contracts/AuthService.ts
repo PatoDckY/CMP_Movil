@@ -23,5 +23,5 @@ export interface AuthService {
 
   checkSession(): Promise<SessionResponseDto>;
 
-  logout(): Promise<void>;
+  logout(accessToken: string): Promise<void>;
 }

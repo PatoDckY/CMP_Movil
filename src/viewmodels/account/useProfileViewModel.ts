@@ -118,6 +118,7 @@ function validateForm(
  */
 export function useProfileViewModel(
   repository: ProfileRepository,
+  onSaved?: (profile: Profile) => void,
 ) {
   const [profile, setProfile] =
     useState<Profile | null>(null);
@@ -134,6 +135,7 @@ export function useProfileViewModel(
   const mountedRef = useRef(true);
   const requestIdRef = useRef(0);
   const savingRef = useRef(false);
+  const loadingRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -141,6 +143,7 @@ export function useProfileViewModel(
     return () => {
       mountedRef.current = false;
       requestIdRef.current += 1;
+      loadingRef.current = false;
     };
   }, []);
 
@@ -161,6 +164,8 @@ export function useProfileViewModel(
 
   const loadProfile =
     useCallback(async (): Promise<void> => {
+      if (loadingRef.current || savingRef.current) { return; }
+      loadingRef.current = true;
       const requestId =
         ++requestIdRef.current;
 
@@ -200,6 +205,8 @@ export function useProfileViewModel(
         );
 
         setStatus('error');
+      } finally {
+        if (requestId === requestIdRef.current) { loadingRef.current = false; }
       }
     }, [repository]);
 
@@ -246,6 +253,7 @@ export function useProfileViewModel(
           );
 
         if (mountedRef.current) {
+          onSaved?.(updated);
           setProfile(updated);
           setForm(
             profileToForm(updated),
@@ -253,7 +261,7 @@ export function useProfileViewModel(
           setStatus('ready');
         }
 
-        return true;
+        return mountedRef.current;
       } catch (err) {
         if (mountedRef.current) {
           setError(
@@ -273,6 +281,7 @@ export function useProfileViewModel(
       form,
       profile,
       repository,
+      onSaved,
       status,
     ]);
 

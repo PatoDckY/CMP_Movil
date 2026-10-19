@@ -25,6 +25,7 @@ export function FormField({
 
       <TextInput
         {...props}
+        accessibilityLabel={props.accessibilityLabel ?? label}
         placeholderTextColor={
           colors.textSecondary
         }

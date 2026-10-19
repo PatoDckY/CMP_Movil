@@ -28,6 +28,7 @@ export const profileService: ProfileService = {
       {
         method: 'GET',
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
@@ -40,6 +41,7 @@ export const profileService: ProfileService = {
         method: 'PUT',
         body: JSON.stringify(data),
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 };

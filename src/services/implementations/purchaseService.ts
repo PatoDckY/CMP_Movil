@@ -15,6 +15,8 @@ export const purchaseService: PurchaseService = {
   getPurchases(): Promise<PurchaseListResponseDto> {
     return apiRequest<PurchaseListResponseDto>(
       '/compras-cursos',
+      {},
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
@@ -23,6 +25,8 @@ export const purchaseService: PurchaseService = {
   ): Promise<PurchaseDetailResponseDto> {
     return apiRequest<PurchaseDetailResponseDto>(
       `/compras-cursos/${purchaseId}`,
+      {},
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
@@ -35,12 +39,15 @@ export const purchaseService: PurchaseService = {
         method: 'POST',
         body: JSON.stringify(data),
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
   getPaymentMethods(): Promise<PaymentMethodsResponseDto> {
     return apiRequest<PaymentMethodsResponseDto>(
       '/metodos-pago-cursos',
+      {},
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 
@@ -54,6 +61,7 @@ export const purchaseService: PurchaseService = {
         method: 'POST',
         body: JSON.stringify(data),
       },
+      {requireAuthentication: true, timeoutMs: 15_000},
     );
   },
 };
