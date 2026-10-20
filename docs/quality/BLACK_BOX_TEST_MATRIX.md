@@ -117,3 +117,50 @@ Las pruebas usan el backend real. Los casos que escriben datos (REG, COM, ARCO) 
 - El MFA móvil no se cubre: no hay contrato verificado para completarlo.
 - Notificaciones, lecciones y módulos no se cubren: no existe API de cliente verificada (ver `BACKEND_CONTRACTS.md`).
 - El cierre de sesión por cambio de contraseña (BB-60) depende de que el backend invalide los tokens; si no lo hace, registrarlo como hallazgo.
+
+## Builds para las pruebas
+
+Requisitos en la máquina de compilación: JDK 17 o superior, Android SDK (con `platform-tools`) y `ANDROID_HOME` definido. `npm ci` ya ejecutado.
+
+| Build | Application ID | Nombre en el teléfono | Firma |
+|---|---|---|---|
+| Debug | `com.cmp_movil.debug` | CMP Debug | keystore debug |
+| Release | `com.cmp_movil` | CMP_Movil | keystore debug (temporal; producción en #127) |
+
+Release ya está minificado (`minifyEnabled true`, `shrinkResources true`) y lleva el JavaScript embebido. Debug NO lleva el JavaScript embebido: necesita Metro (ver abajo).
+
+### Compilar
+
+```bash
+cd android
+./gradlew assembleDebug      # android/app/build/outputs/apk/debug/app-debug.apk
+./gradlew assembleRelease    # android/app/build/outputs/apk/release/app-release.apk
+```
+
+En Windows PowerShell usar `.\gradlew.bat` en lugar de `./gradlew`.
+
+### Instalar en el teléfono
+
+```bash
+adb devices                                   # el dispositivo debe aparecer como "device"
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb install -r android/app/build/outputs/apk/release/app-release.apk
+```
+
+Debug y Release conviven porque tienen distinto Application ID. Se distinguen por el nombre del ícono ("CMP Debug" y "CMP_Movil") y con `adb shell pm list packages | grep cmp_movil`.
+
+### Ejecutar Debug
+
+```bash
+npm start                  # en una terminal: Metro
+adb reverse tcp:8081 tcp:8081
+```
+
+Con Metro y `adb reverse` activos, abrir "CMP Debug" en el teléfono. Sin Metro, la app Debug muestra un error de conexión al bundle; eso no es un bug de la app.
+
+### Desinstalar
+
+```bash
+adb uninstall com.cmp_movil.debug
+adb uninstall com.cmp_movil
+```

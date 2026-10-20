@@ -96,6 +96,9 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            // Permite instalar Debug y Release a la vez en el mismo dispositivo.
+            // El nombre visible "CMP Debug" está en src/debug/res/values/strings.xml.
+            applicationIdSuffix ".debug"
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
