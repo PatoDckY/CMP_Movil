@@ -494,6 +494,23 @@ que todavía no exista.
 La implementación se realizará cuando CMP_Site exponga el contrato
 correspondiente.
 
+## 16.1. Derecho de oposición (Opt-Out)
+
+`AccountScreen` muestra tres switches (`OptOutSwitchRow`) en la sección
+"Derecho de oposición". Siguen el flujo:
+
+View (`AccountScreen`) → ViewModel (`useOptOutViewModel`) →
+Repository (`OptOutPreferencesRepository` / `OptOutPreferencesRepositoryImpl`) →
+Storage (`keychainPreferencesStorage`).
+
+El estado, la carga, el guardado, la reversión ante error y la exclusión
+de cambios simultáneos viven en el ViewModel; la View solo renderiza.
+
+CMP_Site no expone un endpoint para estas preferencias, por lo que no se
+crea un Service HTTP. La persistencia es local y está marcada con TODO en
+el Repository. El contrato requerido está en
+`docs/quality/BACKEND_CONTRACTS.md`.
+
 ## 17. Seguridad
 
 CMP_Movil no almacenará secretos propios de la infraestructura.

@@ -17,11 +17,13 @@ import {
   AccountSection,
   AccountAction,
 } from '../../src/components/account/AccountPresentation';
+import { OptOutSwitchRow } from '../../src/components/account/OptOutSwitchRow';
 import { PrimaryButton } from '../../src/components/common/PrimaryButton';
 import { AuthenticatedStackParamList } from '../../src/navigation/types';
 import { useSession } from '../../src/session/SessionContext';
 import {
   accountRepository,
+  optOutPreferencesRepository,
   profileRepository,
 } from '../../src/config/dependencies';
 import { AccountDeletionError } from '../../src/models/AccountDeletion';
@@ -34,6 +36,14 @@ jest.mock('../../src/session/SessionContext', () => ({
 jest.mock('../../src/config/dependencies', () => ({
   accountRepository: { requestDeletion: jest.fn() },
   profileRepository: { getProfile: jest.fn(), updateProfile: jest.fn() },
+  optOutPreferencesRepository: {
+    load: jest.fn().mockResolvedValue({
+      nonEssentialCommunications: false,
+      analytics: false,
+      shareProgress: false,
+    }),
+    save: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 jest.mock('react-native-keyboard-controller', () => ({
   KeyboardAwareScrollView: jest.fn(
@@ -129,6 +139,12 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
     );
     sessionMock.mockReturnValue({ user, logout, updateProfile: jest.fn() });
     (profileRepository.getProfile as jest.Mock).mockResolvedValue(profile);
+    (optOutPreferencesRepository.load as jest.Mock).mockResolvedValue({
+      nonEssentialCommunications: false,
+      analytics: false,
+      shareProgress: false,
+    });
+    (optOutPreferencesRepository.save as jest.Mock).mockResolvedValue(undefined);
   });
   afterEach(async () => {
     await act(async () => renderer?.unmount());
@@ -149,6 +165,7 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
       'Información personal',
       'Mi formación',
       'Configuración y privacidad',
+      'Derecho de oposición',
       'Gestión de cuenta',
     ]);
     expect(sections.at(-1)?.findByType(PrimaryButton).props.label).toBe(
@@ -158,6 +175,22 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
       renderer.root.findByProps({ testID: 'account-management-section' }),
     ).toBeDefined();
     expect(accountRepository.requestDeletion).not.toHaveBeenCalled();
+  });
+
+  test('cuenta muestra los tres switches de Opt-Out y persiste el cambio', async () => {
+    await act(async () => {
+      renderer = ReactTestRenderer.create(<AccountScreen {...accountProps} />);
+    });
+    const rows = renderer.root.findAllByType(OptOutSwitchRow);
+    expect(rows).toHaveLength(3);
+    expect(optOutPreferencesRepository.load).toHaveBeenCalledWith(user.id);
+    await act(async () => {
+      rows[1].props.onValueChange(true);
+    });
+    expect(optOutPreferencesRepository.save).toHaveBeenCalledWith(
+      user.id,
+      expect.objectContaining({ analytics: true }),
+    );
   });
 
   test.each([

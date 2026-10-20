@@ -6,17 +6,22 @@ import {
   AccountSection,
   InstitutionalHeader,
 } from '../../components/account/AccountPresentation';
+import { OptOutSwitchRow } from '../../components/account/OptOutSwitchRow';
 import { AppFooter } from '../../components/common/AppFooter';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
+import { optOutPreferencesRepository } from '../../config/dependencies';
 import { LogoutError } from '../../models/LogoutError';
+import { OPT_OUT_OPTIONS } from '../../models/OptOutPreferences';
 import { AuthenticatedStackParamList } from '../../navigation/types';
 import { useSession } from '../../session/SessionContext';
+import { useOptOutViewModel } from '../../viewmodels/account/useOptOutViewModel';
 import { styles } from './AccountScreen.styles';
 
 type Props = NativeStackScreenProps<AuthenticatedStackParamList, 'Account'>;
 
 export function AccountScreen({ navigation }: Props): React.JSX.Element {
   const { user, logout } = useSession();
+  const optOut = useOptOutViewModel(optOutPreferencesRepository, user?.id);
   const handleLogout = async () => {
     try {
       await logout();
@@ -99,6 +104,29 @@ export function AccountScreen({ navigation }: Props): React.JSX.Element {
           size="comfortable"
           onPress={handleLogout}
         />
+      </AccountSection>
+
+      <AccountSection
+        title="Derecho de oposición"
+        description="Activa un interruptor para oponerte a ese tratamiento de tus datos. La preferencia se guarda solo en este dispositivo."
+      >
+        {OPT_OUT_OPTIONS.map(option => (
+          <OptOutSwitchRow
+            key={option.key}
+            title={option.title}
+            description={option.description}
+            value={optOut.preferences[option.key]}
+            disabled={optOut.isLoading || optOut.isSaving}
+            onValueChange={value => {
+              void optOut.setOptOut(option.key, value);
+            }}
+          />
+        ))}
+        {optOut.error ? (
+          <Text accessibilityRole="alert" style={styles.helper}>
+            {optOut.error}
+          </Text>
+        ) : null}
       </AccountSection>
 
       {user?.role.toLowerCase() === 'cliente' ? (

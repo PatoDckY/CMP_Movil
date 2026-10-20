@@ -22,6 +22,14 @@ jest.mock('../../src/session/SessionContext', () => ({
 jest.mock('../../src/config/dependencies', () => ({
   accountRepository: { requestDeletion: jest.fn() },
   profileRepository: { getProfile: jest.fn(), updateProfile: jest.fn() },
+  optOutPreferencesRepository: {
+    load: jest.fn().mockResolvedValue({
+      nonEssentialCommunications: false,
+      analytics: false,
+      shareProgress: false,
+    }),
+    save: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: jest.fn(({ children }: { children: React.ReactNode }) => children),
