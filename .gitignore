@@ -119,3 +119,6 @@ key.properties
 .cache/
 dist/
 out/
+
+# Generado localmente por Gradle (updateDaemonJvm) con la JVM del daemon
+android/gradle/gradle-daemon-jvm.properties
