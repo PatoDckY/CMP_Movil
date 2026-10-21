@@ -60,6 +60,30 @@ react {
 def enableProguardInReleaseBuilds = true
 
 /**
+ * Firma de producción. Las credenciales NUNCA se versionan: se leen de
+ * android/keystore.properties (ignorado por git; ver keystore.properties.example)
+ * o, si no existe, de las variables de entorno CMP_RELEASE_*.
+ */
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def releaseSigningValue = { String propertyName, String envName ->
+    def value = keystoreProperties.getProperty(propertyName) ?: System.getenv(envName)
+    value?.trim() ? value.trim() : null
+}
+def releaseStoreFile = releaseSigningValue('storeFile', 'CMP_RELEASE_STORE_FILE')
+def releaseStorePassword = releaseSigningValue('storePassword', 'CMP_RELEASE_STORE_PASSWORD')
+def releaseKeyAlias = releaseSigningValue('keyAlias', 'CMP_RELEASE_KEY_ALIAS')
+def releaseKeyPassword = releaseSigningValue('keyPassword', 'CMP_RELEASE_KEY_PASSWORD')
+def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+if (!hasReleaseSigning) {
+    logger.warn('Firma de producción no configurada: el build release saldrá SIN FIRMAR. ' +
+        'Crea android/keystore.properties a partir de keystore.properties.example.')
+}
+
+/**
  * The preferred build flavor of JavaScriptCore (JSC)
  *
  * For example, to use the international variant, you can use:
@@ -92,6 +116,14 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            if (hasReleaseSigning) {
+                storeFile file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
     }
     buildTypes {
         debug {
@@ -101,9 +133,9 @@ android {
             applicationIdSuffix ".debug"
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Sin credenciales de producción NO se firma con debug: el artefacto
+            // queda sin firmar para que nadie lo confunda con una build estable.
+            signingConfig hasReleaseSigning ? signingConfigs.release : null
             minifyEnabled enableProguardInReleaseBuilds
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
