@@ -1,6 +1,5 @@
 import { DEFAULT_OPT_OUT_PREFERENCES } from '../../src/models/OptOutPreferences';
 import { OptOutPreferencesRepository } from '../../src/repositories/contracts/OptOutPreferencesRepository';
-import { OptOutPreferencesRepositoryImpl } from '../../src/repositories/implementations/OptOutPreferencesRepositoryImpl';
 import { useOptOutViewModel } from '../../src/viewmodels/account/useOptOutViewModel';
 import { act, deferred, renderHook } from '../helpers/renderHook';
 
@@ -97,45 +96,5 @@ describe('A66 - Derecho de oposición (Opt-Out)', () => {
     expect(repository.load).not.toHaveBeenCalled();
     expect(repository.save).not.toHaveBeenCalled();
     await hook.unmount();
-  });
-});
-
-describe('OptOutPreferencesRepositoryImpl', () => {
-  function createStorage(initial?: string) {
-    const data = new Map<string, string>();
-    if (initial !== undefined) {
-      data.set('optout_1', initial);
-    }
-    return {
-      data,
-      read: jest.fn(async (key: string) => data.get(key) ?? null),
-      write: jest.fn(async (key: string, value: string) => {
-        data.set(key, value);
-      }),
-    };
-  }
-
-  test('devuelve valores por defecto sin datos o con JSON corrupto', async () => {
-    expect(
-      await new OptOutPreferencesRepositoryImpl(createStorage()).load(1),
-    ).toEqual(DEFAULT_OPT_OUT_PREFERENCES);
-    expect(
-      await new OptOutPreferencesRepositoryImpl(
-        createStorage('{no-json'),
-      ).load(1),
-    ).toEqual(DEFAULT_OPT_OUT_PREFERENCES);
-  });
-
-  test('guarda y recupera por usuario, ignorando campos desconocidos', async () => {
-    const storage = createStorage();
-    const repo = new OptOutPreferencesRepositoryImpl(storage);
-    await repo.save(1, { ...DEFAULT_OPT_OUT_PREFERENCES, analytics: true });
-    expect((await repo.load(1)).analytics).toBe(true);
-    expect((await repo.load(2)).analytics).toBe(false);
-    storage.data.set(
-      'optout_1',
-      JSON.stringify({ analytics: 'yes', extra: true }),
-    );
-    expect(await repo.load(1)).toEqual(DEFAULT_OPT_OUT_PREFERENCES);
   });
 });

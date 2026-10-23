@@ -5,7 +5,7 @@ import {
 import {AccountRepositoryImpl} from '../repositories/implementations/AccountRepositoryImpl';
 import {accountService} from '../services/implementations/accountService';
 import {OptOutPreferencesRepositoryImpl} from '../repositories/implementations/OptOutPreferencesRepositoryImpl';
-import {keychainPreferencesStorage} from '../storage/keychainPreferencesStorage';
+import {optOutPreferencesService} from '../services/implementations/optOutPreferencesService';
 import {passwordRecoveryService} from '../services/implementations/passwordRecoveryService';
 import {CourseMaterialsRepositoryImpl} from '../repositories/implementations/CourseMaterialsRepositoryImpl';
 import {courseMaterialsService} from '../services/implementations/courseMaterialsService';
@@ -106,9 +106,9 @@ export const profileRepository =
 /**
  * A66 - Derecho de oposición (Opt-Out).
  *
- * Persistencia local mientras CMP_Site no exponga un endpoint.
+ * Sincronizada con CMP_Site (GET/PUT /api/profile/privacy-preferences).
  */
 export const optOutPreferencesRepository =
   new OptOutPreferencesRepositoryImpl(
-    keychainPreferencesStorage,
+    optOutPreferencesService,
   );
