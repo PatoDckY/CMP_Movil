@@ -1,39 +1,30 @@
 import {
-  DEFAULT_OPT_OUT_PREFERENCES,
   OptOutPreferences,
   parseOptOutPreferences,
 } from '../../models/OptOutPreferences';
-import { PreferencesStorage } from '../../storage/keychainPreferencesStorage';
+import { OptOutPreferencesService } from '../../services/contracts/OptOutPreferencesService';
 import { OptOutPreferencesRepository } from '../contracts/OptOutPreferencesRepository';
 
-// TODO(A66): CMP_Site no expone un endpoint para preferencias de Opt-Out
-// (ver docs/quality/BACKEND_CONTRACTS.md). Mientras tanto la preferencia es
-// solo local por usuario y dispositivo; migrar a un Service HTTP cuando exista.
+// Decisiones de diseño:
+// - Fallo de red/HTTP: load() y save() propagan el error, igual que
+//   ProfileRepositoryImpl; useOptOutViewModel ya lo traduce a mensaje y revierte
+//   el switch. No se cae a un default "sin oposición", porque mostraría como
+//   inactiva una oposición que el usuario sí ejerció.
+// - Sin caché local: el servidor es la única fuente de verdad (se eliminó el
+//   almacenamiento Keychain) para no duplicar estado ni mostrar valores viejos.
+// - userId se conserva por el contrato del ViewModel; el backend identifica al
+//   usuario por el Bearer token.
 export class OptOutPreferencesRepositoryImpl
   implements OptOutPreferencesRepository
 {
-  constructor(private readonly storage: PreferencesStorage) {}
+  constructor(private readonly service: OptOutPreferencesService) {}
 
-  private keyFor(userId: number): string {
-    return `optout_${userId}`;
+  async load(_userId: number): Promise<OptOutPreferences> {
+    const response = await this.service.getPreferences();
+    return parseOptOutPreferences(response.preferences);
   }
 
-  async load(userId: number): Promise<OptOutPreferences> {
-    const raw = await this.storage.read(this.keyFor(userId));
-    if (!raw) {
-      return { ...DEFAULT_OPT_OUT_PREFERENCES };
-    }
-    try {
-      return parseOptOutPreferences(JSON.parse(raw));
-    } catch {
-      return { ...DEFAULT_OPT_OUT_PREFERENCES };
-    }
-  }
-
-  async save(userId: number, preferences: OptOutPreferences): Promise<void> {
-    await this.storage.write(
-      this.keyFor(userId),
-      JSON.stringify(parseOptOutPreferences(preferences)),
-    );
+  async save(_userId: number, preferences: OptOutPreferences): Promise<void> {
+    await this.service.updatePreferences(parseOptOutPreferences(preferences));
   }
 }

@@ -20,6 +20,7 @@ Inspección de código mediante GitHub, rama main, el 2026-10-17. No se hicieron
 | Inscripciones | GET /cliente/mis-cursos | resumen/cursos, progreso y asistencia |
 | Detalle académico | GET /cliente/mis-cursos/{id} | success/curso; filtra ID y usuario/participante autorizado, 404 al no encontrar inscripción autorizada |
 | Perfil | GET/PUT /profile | profile; rectifica nombre, apellidos, edad, sexo y teléfono; no correo, rol ni identificador |
+| Opt-Out (A66, issue #128) | GET/PUT /profile/privacy-preferences | Bearer; GET y PUT responden `{ preferences: { nonEssentialCommunications, analytics, shareProgress }, updatedAt }` (`updatedAt` es null si nunca se guardó; sin registro, las tres banderas son false). PUT exige exactamente esas tres banderas booleanas (400 si faltan, sobran o no son booleanas); 401 sin sesión. Confirmado en producción. El endpoint solo guarda y devuelve el estado: no aplica las banderas en otros módulos de CMP_Site |
 | A17 | DELETE /account | Bearer de cliente, exactamente contrasena (1–200 caracteres) y confirmacion:true; 202 |
 
 ## A17: semántica y errores
@@ -45,11 +46,6 @@ La sesión NO se cierra al aceptar una solicitud.
 - Notificaciones: hay tablas y gestión administrativa, pero no se identificó endpoint móvil para listar, contar ni marcar leído. Se requiere filtro por destinatario, paginación, IDs, estado y contrato de actualización.
 - Lecciones/módulos: búsqueda sin contrato verificable. La API disponible maneja inscripciones, sesiones, asistencia y progreso académico calculado en backend. Se requieren contratos de contenido autorizado, completar lección y reanudar antes de implementar esas operaciones.
 - Documentos oficiales: routes.ts y Footer web referencian /privacidad y /terminos, pero no se verificaron páginas en src/app ni src/app/(public). No se crean enlaces a destinos sin verificar ni textos jurídicos inventados. La información móvil sigue marcada provisional.
-- Preferencias de Opt-Out (derecho de Oposición, A66 / issue #128): en la lectura de contratos de este documento no aparece ningún endpoint para consultar o guardar preferencias de oposición, y no se inventa uno. Las tres preferencias (`nonEssentialCommunications`, `analytics`, `shareProgress`) se persisten SOLO localmente, por usuario y dispositivo, en Keychain (`src/storage/keychainPreferencesStorage.ts`, vía `OptOutPreferencesRepositoryImpl`, con comentario TODO). Consecuencia: la oposición no llega al servidor, no se sincroniza entre dispositivos y CMP_Site no puede respetarla; hoy es evidencia de interfaz y de estado local, no un cumplimiento completo. Contrato requerido de CMP_Site, a confirmar con el equipo del backend:
-  - `GET /api/profile/privacy-preferences` (Bearer): `{ preferences: { nonEssentialCommunications: boolean, analytics: boolean, shareProgress: boolean }, updatedAt: string }`.
-  - `PUT /api/profile/privacy-preferences` (Bearer): cuerpo con las tres banderas booleanas; 200 con la misma estructura; 400 por campos inválidos, 401 sin sesión.
-  - El servidor debe aplicar las banderas en envío de comunicaciones, analítica y compartición con terceros, y registrar fecha del cambio.
-  - Al existir, se agrega un Service HTTP y se reemplaza el almacenamiento local en el Repository sin tocar ViewModel ni View.
 - Registro de consentimiento versionado: el body actual de registro no acredita ID/versión de aviso ni fecha de aceptación. No se agrega un campo no soportado.
 
 ## Evidencia de archivos leídos

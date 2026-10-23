@@ -501,14 +501,15 @@ correspondiente.
 
 View (`AccountScreen`) → ViewModel (`useOptOutViewModel`) →
 Repository (`OptOutPreferencesRepository` / `OptOutPreferencesRepositoryImpl`) →
-Storage (`keychainPreferencesStorage`).
+Service (`optOutPreferencesService`, `GET/PUT /api/profile/privacy-preferences`).
 
 El estado, la carga, el guardado, la reversión ante error y la exclusión
 de cambios simultáneos viven en el ViewModel; la View solo renderiza.
 
-CMP_Site no expone un endpoint para estas preferencias, por lo que no se
-crea un Service HTTP. La persistencia es local y está marcada con TODO en
-el Repository. El contrato requerido está en
+El servidor es la única fuente de verdad: no hay caché local (se eliminó el
+almacenamiento Keychain) para no duplicar estado. Si la carga o el guardado
+fallan, el Repository propaga el error (igual que `ProfileRepositoryImpl`) y
+el ViewModel muestra el mensaje y revierte el switch. El contrato está en
 `docs/quality/BACKEND_CONTRACTS.md`.
 
 ## 17. Seguridad
