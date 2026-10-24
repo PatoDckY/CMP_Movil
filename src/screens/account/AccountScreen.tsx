@@ -117,6 +117,11 @@ export function AccountScreen({ navigation }: Props): React.JSX.Element {
             dispositivo y revocar el acceso en el servidor.
           </Text>
         </View>
+        <AccountAction
+          title="Cambiar contraseña"
+          description="Actualiza tu contraseña. Al terminar deberás iniciar sesión de nuevo."
+          onPress={() => navigation.navigate('ChangePassword')}
+        />
         <PrimaryButton
           label="Cerrar sesión"
           variant="outline"

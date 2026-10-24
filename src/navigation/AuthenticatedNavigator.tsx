@@ -2,6 +2,7 @@
 import React from 'react';
 import {AccountDeletionScreen} from '../screens/account/AccountDeletionScreen';
 import {NotificationsScreen} from '../screens/notifications/NotificationsScreen';
+import {ChangePasswordScreen} from '../screens/account/ChangePasswordScreen';
 import {LegalInformationScreen} from '../screens/account/LegalInformationScreen';
 import {
   createNativeStackNavigator,
@@ -153,6 +154,7 @@ export function AuthenticatedNavigator(): React.JSX.Element {
       />
 
       <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} options={{title: 'Solicitud de eliminación'}} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{title: 'Cambiar contraseña'}} />
       <Stack.Screen name="LegalInformation" component={LegalInformationScreen} options={{title: 'Privacidad y términos'}} />
 
       <Stack.Screen
