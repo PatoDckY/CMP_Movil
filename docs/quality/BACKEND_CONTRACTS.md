@@ -21,6 +21,8 @@ Inspección de código mediante GitHub, rama main, el 2026-10-17. No se hicieron
 | Detalle académico | GET /cliente/mis-cursos/{id} | success/curso; filtra ID y usuario/participante autorizado, 404 al no encontrar inscripción autorizada |
 | Perfil | GET/PUT /profile | profile; rectifica nombre, apellidos, edad, sexo y teléfono; no correo, rol ni identificador |
 | Opt-Out (A66, issue #128) | GET/PUT /profile/privacy-preferences | Bearer; GET y PUT responden `{ preferences: { nonEssentialCommunications, analytics, shareProgress }, updatedAt }` (`updatedAt` es null si nunca se guardó; sin registro, las tres banderas son false). PUT exige exactamente esas tres banderas booleanas (400 si faltan, sobran o no son booleanas); 401 sin sesión. Confirmado en producción. El endpoint solo guarda y devuelve el estado: no aplica las banderas en otros módulos de CMP_Site |
+| Notificaciones (B-6.7, issues #83 y #84) | GET /cliente/notificaciones?page=&pageSize= | Bearer; `{ notifications: Notification[], unreadCount, page, pageSize, total }`. Más recientes primero; pageSize máximo 50 (default 20). Cada item: id, courseId, enrollmentId, sessionId, evaluationId, type, title, message, channel, deliveryStatus, scheduledAt, sentAt, readAt. Disponible en producción (CMP_Site PR #8) |
+| Notificación leída | PATCH /cliente/notificaciones/{id}/leida | Bearer, sin cuerpo; devuelve la notificación actualizada sin envolver (mismo shape que cada item). 404 si no existe o no es propia; 409 si aún no está "Enviada"; 200 idempotente si ya estaba leída. Disponible en producción (CMP_Site PR #8) |
 | A17 | DELETE /account | Bearer de cliente, exactamente contrasena (1–200 caracteres) y confirmacion:true; 202 |
 
 ## A17: semántica y errores
@@ -43,7 +45,6 @@ La sesión NO se cierra al aceptar una solicitud.
 
 - Cambio de contraseña autenticado: búsqueda por contrasenaActual no produjo coincidencias; no hay ruta verificada. La ruta tentativa auth/change-password no existe en la lectura realizada. Se requiere especificar método, body, reautenticación y efecto sobre tokens.
 - Reset por correo sí tiene flujo web y /auth/password-reset/confirm. No equivale a cambio autenticado: requiere el token del correo. El móvil conserva la solicitud de recuperación existente.
-- Notificaciones: hay tablas y gestión administrativa, pero no se identificó endpoint móvil para listar, contar ni marcar leído. Se requiere filtro por destinatario, paginación, IDs, estado y contrato de actualización.
 - Lecciones/módulos: búsqueda sin contrato verificable. La API disponible maneja inscripciones, sesiones, asistencia y progreso académico calculado en backend. Se requieren contratos de contenido autorizado, completar lección y reanudar antes de implementar esas operaciones.
 - Documentos oficiales: routes.ts y Footer web referencian /privacidad y /terminos, pero no se verificaron páginas en src/app ni src/app/(public). No se crean enlaces a destinos sin verificar ni textos jurídicos inventados. La información móvil sigue marcada provisional.
 - Registro de consentimiento versionado: el body actual de registro no acredita ID/versión de aviso ni fecha de aceptación. No se agrega un campo no soportado.

@@ -23,6 +23,7 @@ import { AuthenticatedStackParamList } from '../../src/navigation/types';
 import { useSession } from '../../src/session/SessionContext';
 import {
   accountRepository,
+  notificationRepository,
   optOutPreferencesRepository,
   profileRepository,
 } from '../../src/config/dependencies';
@@ -36,6 +37,7 @@ jest.mock('../../src/session/SessionContext', () => ({
 jest.mock('../../src/config/dependencies', () => ({
   accountRepository: { requestDeletion: jest.fn() },
   profileRepository: { getProfile: jest.fn(), updateProfile: jest.fn() },
+  notificationRepository: { getNotifications: jest.fn(), markAsRead: jest.fn() },
   optOutPreferencesRepository: {
     load: jest.fn().mockResolvedValue({
       nonEssentialCommunications: false,
@@ -82,6 +84,7 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
   let renderer: ReturnType<typeof ReactTestRenderer.create>;
   const navigation = {
     navigate: jest.fn(),
+    addListener: jest.fn(() => jest.fn()),
     goBack: jest.fn(),
     popTo: jest.fn(),
   };
@@ -145,6 +148,14 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
       shareProgress: false,
     });
     (optOutPreferencesRepository.save as jest.Mock).mockResolvedValue(undefined);
+    (notificationRepository.getNotifications as jest.Mock).mockResolvedValue({
+      notifications: [],
+      unreadCount: 3,
+      page: 1,
+      pageSize: 1,
+      total: 3,
+    });
+    navigation.addListener.mockReturnValue(jest.fn());
   });
   afterEach(async () => {
     await act(async () => renderer?.unmount());
@@ -197,6 +208,7 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
     ['Mis datos personales', 'PersonalData'],
     ['Mis cursos', 'MyCourses'],
     ['Historial de compras', 'PurchaseHistory'],
+    ['Centro de notificaciones', 'Notifications'],
     ['Privacidad y términos', 'LegalInformation'],
   ])('la acción %s conserva su ruta %s', async (title, route) => {
     await act(async () => {
@@ -209,6 +221,17 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
         ?.props.onPress(),
     );
     expect(navigation.navigate).toHaveBeenCalledWith(route);
+  });
+
+  test('cuenta muestra el contador de notificaciones sin leer como badge', async () => {
+    await act(async () => {
+      renderer = ReactTestRenderer.create(<AccountScreen {...accountProps} />);
+    });
+    expect(notificationRepository.getNotifications).toHaveBeenCalledWith(1, 1);
+    const action = renderer.root
+      .findAllByType(AccountAction)
+      .find(node => node.props.title === 'Centro de notificaciones');
+    expect(action?.props.badge).toBe(3);
   });
 
   test('abrir A17 solo navega y requiere confirmación en otra pantalla', async () => {
