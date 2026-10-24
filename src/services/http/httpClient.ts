@@ -30,6 +30,9 @@ interface RequestPolicy {
   timeoutMs?: number;
   requireAuthentication?: boolean;
   expectedStatus?: number;
+  // Un 401 con token ya renovado es un rechazo de la operación (p. ej. contraseña
+  // actual incorrecta), no una sesión inválida: no se borran las credenciales.
+  preserveSessionOnUnauthorized?: boolean;
 }
 
 function getErrorMessage(
@@ -377,7 +380,7 @@ export class HttpClient {
         const refreshToken = await tokenStorage.getRefreshToken();
         assertCurrentSession();
         // Si falló la red durante el refresh se conservan credenciales y contexto.
-        if (refreshed || !refreshToken) {
+        if ((refreshed && !policy?.preserveSessionOnUnauthorized) || !refreshToken) {
           await tokenStorage.clearTokens();
         }
       }

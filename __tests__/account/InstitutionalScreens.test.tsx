@@ -209,6 +209,7 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
     ['Mis cursos', 'MyCourses'],
     ['Historial de compras', 'PurchaseHistory'],
     ['Centro de notificaciones', 'Notifications'],
+    ['Cambiar contraseña', 'ChangePassword'],
     ['Privacidad y términos', 'LegalInformation'],
   ])('la acción %s conserva su ruta %s', async (title, route) => {
     await act(async () => {

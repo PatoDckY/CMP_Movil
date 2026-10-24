@@ -7,6 +7,8 @@ import {accountService} from '../services/implementations/accountService';
 import {OptOutPreferencesRepositoryImpl} from '../repositories/implementations/OptOutPreferencesRepositoryImpl';
 import {NotificationRepositoryImpl} from '../repositories/implementations/NotificationRepositoryImpl';
 import {notificationService} from '../services/implementations/notificationService';
+import {PasswordChangeRepositoryImpl} from '../repositories/implementations/PasswordChangeRepositoryImpl';
+import {passwordChangeService} from '../services/implementations/passwordChangeService';
 import {optOutPreferencesService} from '../services/implementations/optOutPreferencesService';
 import {passwordRecoveryService} from '../services/implementations/passwordRecoveryService';
 import {CourseMaterialsRepositoryImpl} from '../repositories/implementations/CourseMaterialsRepositoryImpl';
@@ -121,4 +123,12 @@ export const optOutPreferencesRepository =
 export const notificationRepository =
   new NotificationRepositoryImpl(
     notificationService,
+  );
+
+/**
+ * Cambio de contraseña autenticado (#86).
+ */
+export const passwordChangeRepository =
+  new PasswordChangeRepositoryImpl(
+    passwordChangeService,
   );

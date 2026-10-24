@@ -40,5 +40,6 @@ export type AuthenticatedStackParamList =
     // A17 - Acceso y Rectificación.
     PersonalData: undefined;
     AccountDeletion: undefined;
+    ChangePassword: undefined;
     LegalInformation: undefined;
   };
