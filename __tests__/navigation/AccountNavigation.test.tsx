@@ -22,6 +22,10 @@ jest.mock('../../src/session/SessionContext', () => ({
 jest.mock('../../src/config/dependencies', () => ({
   accountRepository: { requestDeletion: jest.fn() },
   profileRepository: { getProfile: jest.fn(), updateProfile: jest.fn() },
+  notificationRepository: {
+    getNotifications: jest.fn().mockResolvedValue({ notifications: [], unreadCount: 0, page: 1, pageSize: 1, total: 0 }),
+    markAsRead: jest.fn(),
+  },
   optOutPreferencesRepository: {
     load: jest.fn().mockResolvedValue({
       nonEssentialCommunications: false,
@@ -143,7 +147,7 @@ describe('PF/PS - navegación y formulario de eliminación', () => {
   test('cliente entra a A17 desde cuenta; otro rol no tiene el acceso', async () => {
     const navigate = jest.fn();
     const props = {
-      navigation: { navigate },
+      navigation: { navigate, addListener: jest.fn(() => jest.fn()) },
     } as unknown as NativeStackScreenProps<
       AuthenticatedStackParamList,
       'Account'

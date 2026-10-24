@@ -481,18 +481,19 @@ contempla datos como:
 
 ## 16. Notificaciones
 
-La aplicación contempla el modelo Notification y un contrato Repository
-para el acceso futuro a notificaciones académicas.
+El Centro de notificaciones sigue el flujo:
 
-Actualmente CMP_Site dispone de estructuras de notificación en el
-backend, pero no se ha identificado una API de cliente completa para
-consultarlas desde CMP_Movil.
+View (`NotificationsScreen`) → ViewModel (`useNotificationsViewModel`) →
+Repository (`NotificationRepository` / `NotificationRepositoryImpl`) →
+Service (`notificationService`, `GET /api/cliente/notificaciones` y
+`PATCH /api/cliente/notificaciones/{id}/leida`).
 
-Por esta razón no se inventará un endpoint ni una implementación Service
-que todavía no exista.
-
-La implementación se realizará cuando CMP_Site exponga el contrato
-correspondiente.
+El ViewModel concentra la paginación ("cargar más"), el refresco, el
+contador de no leídas y el marcado como leída con actualización optimista:
+si el PATCH falla se revierte solo esa notificación y su contador, y se
+muestra el error. `AccountScreen` muestra el contador como badge mediante
+`useUnreadNotificationsCount`. El contrato está en
+`docs/quality/BACKEND_CONTRACTS.md`.
 
 ## 16.1. Derecho de oposición (Opt-Out)
 

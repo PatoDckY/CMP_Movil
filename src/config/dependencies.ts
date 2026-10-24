@@ -5,6 +5,8 @@ import {
 import {AccountRepositoryImpl} from '../repositories/implementations/AccountRepositoryImpl';
 import {accountService} from '../services/implementations/accountService';
 import {OptOutPreferencesRepositoryImpl} from '../repositories/implementations/OptOutPreferencesRepositoryImpl';
+import {NotificationRepositoryImpl} from '../repositories/implementations/NotificationRepositoryImpl';
+import {notificationService} from '../services/implementations/notificationService';
 import {optOutPreferencesService} from '../services/implementations/optOutPreferencesService';
 import {passwordRecoveryService} from '../services/implementations/passwordRecoveryService';
 import {CourseMaterialsRepositoryImpl} from '../repositories/implementations/CourseMaterialsRepositoryImpl';
@@ -111,4 +113,12 @@ export const profileRepository =
 export const optOutPreferencesRepository =
   new OptOutPreferencesRepositoryImpl(
     optOutPreferencesService,
+  );
+
+/**
+ * Centro de notificaciones (#83, #84).
+ */
+export const notificationRepository =
+  new NotificationRepositoryImpl(
+    notificationService,
   );

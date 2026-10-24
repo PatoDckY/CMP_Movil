@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -9,12 +9,16 @@ import {
 import { OptOutSwitchRow } from '../../components/account/OptOutSwitchRow';
 import { AppFooter } from '../../components/common/AppFooter';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
-import { optOutPreferencesRepository } from '../../config/dependencies';
+import {
+  notificationRepository,
+  optOutPreferencesRepository,
+} from '../../config/dependencies';
 import { LogoutError } from '../../models/LogoutError';
 import { OPT_OUT_OPTIONS } from '../../models/OptOutPreferences';
 import { AuthenticatedStackParamList } from '../../navigation/types';
 import { useSession } from '../../session/SessionContext';
 import { useOptOutViewModel } from '../../viewmodels/account/useOptOutViewModel';
+import { useUnreadNotificationsCount } from '../../viewmodels/notifications/useNotificationsViewModel';
 import { styles } from './AccountScreen.styles';
 
 type Props = NativeStackScreenProps<AuthenticatedStackParamList, 'Account'>;
@@ -22,6 +26,15 @@ type Props = NativeStackScreenProps<AuthenticatedStackParamList, 'Account'>;
 export function AccountScreen({ navigation }: Props): React.JSX.Element {
   const { user, logout } = useSession();
   const optOut = useOptOutViewModel(optOutPreferencesRepository, user?.id);
+  const { unreadCount, refresh: refreshUnread } =
+    useUnreadNotificationsCount(notificationRepository);
+  // El contador se actualiza al volver desde el Centro de notificaciones.
+  useEffect(() => {
+    void refreshUnread();
+    return navigation.addListener('focus', () => {
+      void refreshUnread();
+    });
+  }, [navigation, refreshUnread]);
   const handleLogout = async () => {
     try {
       await logout();
@@ -80,6 +93,12 @@ export function AccountScreen({ navigation }: Props): React.JSX.Element {
           description="Revisa tus solicitudes de compra y reportes de pago."
           onPress={() => navigation.navigate('PurchaseHistory')}
         />
+        <AccountAction
+          title="Centro de notificaciones"
+          description="Revisa los avisos sobre tus cursos, sesiones y evaluaciones."
+          badge={unreadCount}
+          onPress={() => navigation.navigate('Notifications')}
+        />
       </AccountSection>
 
       <AccountSection
@@ -108,7 +127,7 @@ export function AccountScreen({ navigation }: Props): React.JSX.Element {
 
       <AccountSection
         title="Derecho de oposición"
-        description="Activa un interruptor para oponerte a ese tratamiento de tus datos. La preferencia se guarda solo en este dispositivo."
+        description="Activa un interruptor para oponerte a ese tratamiento de tus datos. La preferencia se guarda en tu cuenta."
       >
         {OPT_OUT_OPTIONS.map(option => (
           <OptOutSwitchRow

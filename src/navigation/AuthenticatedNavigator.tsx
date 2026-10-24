@@ -1,6 +1,7 @@
 
 import React from 'react';
 import {AccountDeletionScreen} from '../screens/account/AccountDeletionScreen';
+import {NotificationsScreen} from '../screens/notifications/NotificationsScreen';
 import {LegalInformationScreen} from '../screens/account/LegalInformationScreen';
 import {
   createNativeStackNavigator,
@@ -116,6 +117,14 @@ export function AuthenticatedNavigator(): React.JSX.Element {
         component={PurchaseHistoryScreen}
         options={{
           title: 'Historial de compras',
+        }}
+      />
+
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          title: 'Centro de notificaciones',
         }}
       />
 

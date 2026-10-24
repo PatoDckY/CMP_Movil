@@ -62,15 +62,20 @@ export function AccountAction({
   title,
   description,
   onPress,
+  badge,
 }: {
   title: string;
   description: string;
   onPress: () => void;
+  badge?: number;
 }): React.JSX.Element {
+  const hasBadge = badge !== undefined && badge > 0;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={
+        hasBadge ? `${title}, ${badge} sin leer` : title
+      }
       accessibilityHint={description}
       onPress={onPress}
       style={({ pressed }) => [styles.action, pressed && styles.pressed]}
@@ -79,6 +84,13 @@ export function AccountAction({
         <Text style={styles.actionTitle}>{title}</Text>
         <Text style={styles.actionDescription}>{description}</Text>
       </View>
+      {hasBadge ? (
+        <View accessible={false} style={styles.badge}>
+          <Text accessible={false} allowFontScaling={false} style={styles.badgeText}>
+            {badge > 99 ? '99+' : badge}
+          </Text>
+        </View>
+      ) : null}
       <View accessible={false} style={styles.actionIndicator}>
         <Text accessible={false} allowFontScaling={false} style={styles.arrow}>
           ›

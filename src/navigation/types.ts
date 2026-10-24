@@ -21,6 +21,7 @@ export type AuthenticatedStackParamList =
     Home: undefined;
     MyCourses: undefined;
     PurchaseHistory: undefined;
+    Notifications: undefined;
 
     CreatePurchase: {
       courseId: number;
