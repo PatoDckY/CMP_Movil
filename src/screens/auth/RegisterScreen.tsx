@@ -62,6 +62,7 @@ export function RegisterScreen({
 
     passwordChecks,
     passwordsMatch,
+    ageError,
 
     setFirstName,
     setPaternalLastName,
@@ -358,6 +359,25 @@ export function RegisterScreen({
             editable={!isBusy}
           />
         </View>
+
+        {ageError && (
+          <View
+            accessibilityLiveRegion="polite"
+            style={[
+              styles.matchBox,
+              styles.matchBoxError,
+            ]}>
+            <View style={styles.matchIcon}>
+              <Text style={styles.matchIconText}>
+                !
+              </Text>
+            </View>
+
+            <Text style={styles.matchText}>
+              {ageError}
+            </Text>
+          </View>
+        )}
 
         <Text
           style={

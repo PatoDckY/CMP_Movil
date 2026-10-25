@@ -7,6 +7,12 @@ import {
 
 import { AuthRepository } from '../../repositories/contracts/AuthRepository';
 
+export const MIN_REGISTRATION_AGE = 18;
+
+// Mismo texto que devuelve CMP_Site en POST /auth/register.
+export const UNDERAGE_ERROR_MESSAGE =
+    'Debes ser mayor de edad (18 años cumplidos) para registrar una cuenta.';
+
 export type RegisterState =
     | 'idle'
     | 'sending_otp'
@@ -112,6 +118,19 @@ export function useRegisterViewModel(
         confirmPassword.length > 0 &&
         password === confirmPassword;
 
+    // Error inline (sin Alert): solo aplica a la edad de la cuenta, no a la de
+    // los participantes de un curso, que sí pueden ser menores de edad.
+    const ageError = useMemo(() => {
+        const numericAge = Number(age);
+
+        return age &&
+            Number.isInteger(numericAge) &&
+            numericAge >= 1 &&
+            numericAge < MIN_REGISTRATION_AGE
+            ? UNDERAGE_ERROR_MESSAGE
+            : null;
+    }, [age]);
+
     const validateBasicData =
         useCallback((): boolean => {
             if (!firstName.trim()) {
@@ -150,6 +169,11 @@ export function useRegisterViewModel(
                 );
                 setState('error');
 
+                return false;
+            }
+
+            if (numericAge < MIN_REGISTRATION_AGE) {
+                // El mensaje ya se muestra inline bajo el campo de edad.
                 return false;
             }
 
@@ -440,6 +464,7 @@ export function useRegisterViewModel(
 
         passwordChecks,
         passwordsMatch,
+        ageError,
 
         setFirstName,
         setPaternalLastName,
