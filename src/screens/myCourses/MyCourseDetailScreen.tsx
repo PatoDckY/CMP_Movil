@@ -15,6 +15,7 @@ import { AppFooter } from '../../components/common/AppFooter';
 import { DetailRow } from '../../components/common/DetailRow';
 import { PrimaryButton } from '../../components/common/PrimaryButton';
 import { CourseMaterialsPanel } from '../../components/myCourses/CourseMaterialsPanel';
+import { CourseProgressBar } from '../../components/myCourses/CourseProgressBar';
 import { myCoursesRepository } from '../../config/dependencies';
 import { AuthenticatedStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
@@ -175,6 +176,13 @@ export function MyCourseDetailScreen({
           enrollmentId={course.enrollmentId}
           courseId={course.courseId}
         />
+
+        <View style={styles.section} testID="course-progress-section">
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            Avance del curso
+          </Text>
+          <CourseProgressBar progress={course.progress} />
+        </View>
 
         <View style={styles.section} testID="course-sessions-section">
           <Text accessibilityRole="header" style={styles.sectionTitle}>

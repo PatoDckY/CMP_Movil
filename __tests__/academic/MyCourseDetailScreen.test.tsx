@@ -112,12 +112,13 @@ describe('Detalle de inscripción con sesiones, asistencia y materiales reales d
   const card = (id: string) =>
     renderer.root.findAll(node => node.props.testID === id)[0];
 
-  test('organiza encabezado, materiales, sesiones y asistencia en ese orden y usa ID de inscripción', async () => {
+  test('organiza encabezado, materiales, avance, sesiones y asistencia en ese orden y usa ID de inscripción', async () => {
     await render();
     const tree = JSON.stringify(renderer.toJSON());
     const ids = [
       'course-heading',
       'course-materials-card',
+      'course-progress-section',
       'course-sessions-section',
       'course-attendance-section',
     ];
@@ -126,9 +127,11 @@ describe('Detalle de inscripción con sesiones, asistencia y materiales reales d
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
     expect(myCoursesRepository.getMyCourseDetail).toHaveBeenCalledWith(7);
     expect(courseMaterialsRepository.getMaterials).toHaveBeenCalledWith(7);
-    expect(text(renderer.toJSON())).not.toMatch(
-      /%|Sesiones completadas|lecciones|módulos/,
-    );
+    const content = text(renderer.toJSON());
+    expect(content).toContain('Avance del curso');
+    expect(content).toContain('25%');
+    expect(content).toContain('1 de 4 sesiones');
+    expect(content).not.toMatch(/lecciones|módulos/);
     expect(
       renderer.root
         .findAllByType(PrimaryButton)

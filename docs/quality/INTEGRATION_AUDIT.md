@@ -59,20 +59,16 @@ Cierre de sesión:
 
 **Resultado: no se encontró tracking de progreso por lección, consistente con el cambio de alcance.**
 
-- No hay lecciones, módulos ni "completar/reanudar" en `src/` (el contrato de backend tampoco existe; ver `BACKEND_CONTRACTS.md`). El detalle de Mis cursos solo muestra encabezado, materiales, sesiones y asistencia, y una prueba verifica que no aparezcan `%`, "Sesiones completadas", "lecciones" ni "módulos" (`MyCourseDetailScreen.test.tsx`).
+- No hay lecciones, módulos ni "completar/reanudar" en `src/` (el contrato de backend tampoco existe; ver `BACKEND_CONTRACTS.md`). El detalle de Mis cursos muestra encabezado, materiales, avance del curso, sesiones y asistencia, y una prueba verifica que no aparezcan "lecciones" ni "módulos" (`MyCourseDetailScreen.test.tsx`).
 - Lo que sí hay y no es por lección: porcentaje de **asistencia** y estado académico del curso en `MyCoursesScreen` (en alcance, calculado por el servidor), y la barra de **cupo** del detalle de curso (ocupación, no avance).
-- **Pendiente de decisión (no se tocó)**:
-  1. `CourseProgress` (`src/models/Progress.ts`) y `myCourseMapper.ts` aún cargan `totalSessions`, `completedSessions`, `progressPercentage` y `lastActivityDate`, que ninguna pantalla muestra. Son avance por sesión de clase, no por lección, pero es una métrica de avance sin uso. Quitarlos toca el DTO, el mapper, fixtures y la validación de `porcentajeAvance` en `MyCourses.test.tsx`.
-  2. El interruptor de Opt-Out "No compartir mi progreso con terceros" (`shareProgress`) existe en el contrato de preferencias de privacidad del backend. Su texto alude a "avance académico". Quitarlo desincronizaría el contrato; conviene decidirlo junto con el backend.
+- **Decisión posterior (#104, 2026-10-25)**: el avance por sesión que calcula el servidor (`totalSessions`, `completedSessions`, `progressPercentage`) no es avance por lección y se conserva como avance **a nivel curso**. En lugar de quitar esos campos, se muestran en Mis cursos y en el detalle del curso con `CourseProgressBar`, y el interruptor de Opt-Out `shareProgress` se mantiene sin cambios porque vuelve a tener sentido. Esto sustituye la lectura anterior de este informe, que los consideraba candidatos a retirarse. La prueba de `MyCourseDetailScreen` que prohibía `%` y "Sesiones completadas" se actualizó.
 
 ## Qué se corrigió
 
 - `src/services/http/httpClient.ts`: mensaje de red en español, en un solo punto (criterio 4).
 - `__tests__/services/httpClient.test.ts`: dos pruebas nuevas.
 
-## Pendiente para #104 (decisión, no trivial)
+## Pendiente para #104
 
-1. Decidir si se eliminan los campos de progreso por sesión sin uso (criterio 5, punto 1).
-2. Decidir el destino del interruptor `shareProgress` (criterio 5, punto 2), con el backend.
-3. Repetir los criterios 1 y 4 en dispositivo con una cuenta de prueba en un entorno donde se autoricen escrituras: compra completa, validación de pago por un administrador y cambio de cuenta tras cerrar sesión.
-4. Unificar los mensajes propios de materiales y eliminación de cuenta con el texto común de red, si se quiere un único criterio.
+1. Repetir los criterios 1 y 4 en un entorno de pruebas con escrituras autorizadas: compra completa, validación de pago por un administrador y cambio de cuenta tras cerrar sesión. Las pruebas manuales del equipo en dispositivo ya los dan por funcionando.
+2. Unificar los mensajes propios de materiales y eliminación de cuenta con el texto común de red, si se quiere un único criterio.

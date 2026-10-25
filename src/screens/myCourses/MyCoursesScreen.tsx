@@ -26,6 +26,10 @@ import {
 } from '../../components/common/EmptyState';
 
 import {
+  CourseProgressBar,
+} from '../../components/myCourses/CourseProgressBar';
+
+import {
   InfoCard,
 } from '../../components/common/InfoCard';
 
@@ -241,6 +245,15 @@ export function MyCoursesScreen({
                   <Text style={styles.academicStatus}>
                     Estado académico: {enrollment.progress.academicStatus}
                   </Text>
+
+                  <View style={styles.progressGrid}>
+                    <View style={styles.progressBox}>
+                      <CourseProgressBar
+                        progress={enrollment.progress}
+                        testID={`course-progress-${enrollment.enrollmentId}`}
+                      />
+                    </View>
+                  </View>
 
                   <View style={styles.progressGrid}>
                     <View style={styles.progressBox}>
