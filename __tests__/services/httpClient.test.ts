@@ -1,5 +1,6 @@
 import {
   ApiError,
+  NETWORK_ERROR_MESSAGE,
   httpClient,
 } from '../../src/services/http/httpClient';
 import { tokenStorage } from '../../src/services/security/tokenStorage';
@@ -336,4 +337,26 @@ describe('HttpClient', () => {
       }
     },
   );
+
+  test('la falta de red se informa en español y no cierra la sesión', async () => {
+    mockedTokenStorage.getAccessToken.mockResolvedValue('access-token');
+    fetchMock.mockRejectedValueOnce(new TypeError('Network request failed'));
+
+    await expect(
+      httpClient.request('/cliente/mis-cursos', {method: 'GET'}),
+    ).rejects.toThrow(NETWORK_ERROR_MESSAGE);
+    expect(mockedTokenStorage.clearTokens).not.toHaveBeenCalled();
+  });
+
+  test('un 500 del servidor se informa con mensaje genérico sin exponer detalles', async () => {
+    fetchMock.mockResolvedValueOnce(createResponse(500, {error: 'SQL interno'}));
+
+    await expect(
+      httpClient.request('/cliente/mis-cursos', {method: 'GET'}),
+    ).rejects.toMatchObject({
+      status: 500,
+      message: expect.not.stringContaining('SQL'),
+    });
+    expect(mockedTokenStorage.clearTokens).not.toHaveBeenCalled();
+  });
 });

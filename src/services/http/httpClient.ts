@@ -18,6 +18,9 @@ export class ApiError extends Error {
   }
 }
 
+export const NETWORK_ERROR_MESSAGE =
+  'No fue posible conectarse con el servidor. Revisa tu conexión e inténtalo de nuevo.';
+
 interface RefreshResponse {
   message?: string;
   accessToken: string;
@@ -154,13 +157,22 @@ export class HttpClient {
       );
     }
 
-    return fetch(
-      `${this.baseUrl}${endpoint}`,
-      {
-        ...options,
-        headers,
-      },
-    );
+    try {
+      return await fetch(
+        `${this.baseUrl}${endpoint}`,
+        {
+          ...options,
+          headers,
+        },
+      );
+    } catch (error) {
+      // React Native reporta la falta de red como TypeError en inglés; todas las
+      // pantallas muestran err.message, así que se traduce en un único punto.
+      if (error instanceof TypeError) {
+        throw new Error(NETWORK_ERROR_MESSAGE);
+      }
+      throw error;
+    }
   }
 
   private shouldAttemptRefresh(
