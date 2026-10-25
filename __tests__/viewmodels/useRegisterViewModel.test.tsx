@@ -7,6 +7,7 @@ import {
   AuthRepository,
 } from '../../src/repositories/contracts/AuthRepository';
 import {
+  UNDERAGE_ERROR_MESSAGE,
   useRegisterViewModel,
 } from '../../src/viewmodels/auth/useRegisterViewModel';
 
@@ -594,5 +595,79 @@ describe(
         ).toBeNull();
       },
     );
+
+    describe('edad mínima de la cuenta (#146)', () => {
+      const setAge = (value: string) =>
+        act(async () => {
+          getViewModel().setAge(value);
+        });
+
+      test('edad 17 muestra el error inline y bloquea el envío del código', async () => {
+        await fillBasicData();
+        await setAge('17');
+
+        expect(getViewModel().ageError).toBe(UNDERAGE_ERROR_MESSAGE);
+
+        await act(async () => {
+          await getViewModel().sendOtp();
+        });
+
+        expect(repository.sendRegistrationOtp).not.toHaveBeenCalled();
+        // Error inline: no se usa el canal de errores que dispara el Alert.
+        expect(getViewModel().state).toBe('idle');
+        expect(getViewModel().error).toBeNull();
+      });
+
+      test('edad 17 bloquea el registro', async () => {
+        await fillBasicData();
+        await fillPasswordData();
+        await setAge('17');
+        await act(async () => {
+          getViewModel().setAcceptTerms(true);
+          getViewModel().setVerificationCode('123456');
+        });
+
+        await act(async () => {
+          await getViewModel().register();
+        });
+
+        expect(repository.register).not.toHaveBeenCalled();
+      });
+
+      test('edad 18 no muestra error y permite enviar el código', async () => {
+        repository.sendRegistrationOtp.mockResolvedValue({
+          success: true,
+          message: 'Código enviado',
+          email: 'luis@example.com',
+          emailEnviado: true,
+        } as never);
+        await fillBasicData();
+        await setAge('18');
+
+        expect(getViewModel().ageError).toBeNull();
+
+        await act(async () => {
+          await getViewModel().sendOtp();
+        });
+
+        expect(repository.sendRegistrationOtp).toHaveBeenCalledTimes(1);
+      });
+
+      test.each(['', '0'])(
+        'edad %p conserva "Ingresa una edad válida." sin error de mayoría de edad',
+        async value => {
+          await fillBasicData();
+          await setAge(value);
+
+          expect(getViewModel().ageError).toBeNull();
+
+          await act(async () => {
+            await getViewModel().sendOtp();
+          });
+
+          expect(getViewModel().error).toBe('Ingresa una edad válida.');
+        },
+      );
+    });
   },
 );

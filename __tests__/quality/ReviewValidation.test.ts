@@ -24,6 +24,17 @@ describe('PU/PS - datos inválidos y reglas compartidas verificadas contra backe
       validatePurchase({ ...purchaseInput, participants: [{ participant }] }),
     ).toBeNull();
   });
+  test('un participante menor de edad es válido: la regla de 18 años es solo de la cuenta (#146)', () => {
+    const year = new Date().getUTCFullYear() - 5;
+    expect(
+      validatePurchase({
+        ...purchaseInput,
+        participants: [
+          { participant: { ...participant, birthDate: year + '-01-15' } },
+        ],
+      }),
+    ).toBeNull();
+  });
   test.each([
     { firstName: 'a'.repeat(101) },
     { paternalLastName: '' },
