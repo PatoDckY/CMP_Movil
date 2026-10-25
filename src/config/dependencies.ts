@@ -13,6 +13,8 @@ import {optOutPreferencesService} from '../services/implementations/optOutPrefer
 import {passwordRecoveryService} from '../services/implementations/passwordRecoveryService';
 import {CourseMaterialsRepositoryImpl} from '../repositories/implementations/CourseMaterialsRepositoryImpl';
 import {courseMaterialsService} from '../services/implementations/courseMaterialsService';
+import {LegalRepositoryImpl} from '../repositories/implementations/LegalRepositoryImpl';
+import {legalService} from '../services/implementations/legalService';
 import {tokenStorage} from '../services/security/tokenStorage';
 import {sessionEvents} from '../services/security/sessionEvents';
 
@@ -131,4 +133,14 @@ export const notificationRepository =
 export const passwordChangeRepository =
   new PasswordChangeRepositoryImpl(
     passwordChangeService,
+  );
+
+/**
+ * Documentos legales vigentes (#87).
+ *
+ * GET público /api/legal/{tipo} de CMP_Site.
+ */
+export const legalRepository =
+  new LegalRepositoryImpl(
+    legalService,
   );

@@ -1,5 +1,9 @@
 module.exports = {
   preset: '@react-native/jest-preset',
+  // react-native-markdown-display se publica como ESM sin compilar.
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-markdown-display)/)',
+  ],
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
   collectCoverageFrom: [
     'src/{mappers,models,repositories,services,session,viewmodels}/**/*.{ts,tsx}',

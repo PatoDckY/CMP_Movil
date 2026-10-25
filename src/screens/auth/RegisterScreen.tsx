@@ -18,6 +18,7 @@ import {FormField} from '../../components/auth/FormField';
 import {FormSection} from '../../components/auth/FormSection';
 import {GenderButton} from '../../components/auth/GenderButton';
 import {PasswordField} from '../../components/auth/PasswordField';
+import {LegalSummaryNotice} from '../../components/legal/LegalSummaryNotice';
 import {authRepository} from '../../config/dependencies';
 import {PublicStackParamList} from '../../navigation/types';
 import {useRegisterViewModel} from '../../viewmodels/auth/useRegisterViewModel';
@@ -172,44 +173,6 @@ export function RegisterScreen({
     route.params,
     state,
   ]);
-
-  const showPrivacyNotice = () => {
-    Alert.alert(
-      'Aviso de privacidad',
-      'AVISO PROVISIONAL\n\n'
-        + 'Centro Médico Pichardo utilizará los datos '
-        + 'proporcionados durante el registro para crear '
-        + 'y administrar tu cuenta dentro de SIMG-CMP.\n\n'
-        + 'Los datos tratados pueden incluir nombre, '
-        + 'apellidos, edad, sexo, teléfono y correo '
-        + 'electrónico.\n\n'
-        + 'La información será utilizada para identificar '
-        + 'al usuario, permitir el acceso a las funciones '
-        + 'de la plataforma y mantener la relación con '
-        + 'los servicios asociados a su cuenta.\n\n'
-        + 'La contraseña se procesa de forma segura y no '
-        + 'debe compartirse con otras personas.\n\n'
-        + 'Este texto es provisional y deberá ser '
-        + 'sustituido por el aviso de privacidad oficial '
-        + 'del Centro Médico Pichardo antes de publicar '
-        + 'la aplicación.',
-      [
-        {
-          text: acceptTerms
-            ? 'Retirar aceptación'
-            : 'No acepto',
-          style: 'cancel',
-          onPress: () =>
-            setAcceptTerms(false),
-        },
-        {
-          text: 'He leído y acepto',
-          onPress: () =>
-            setAcceptTerms(true),
-        },
-      ],
-    );
-  };
 
   const goHome = () => {
     navigation.reset({
@@ -784,14 +747,19 @@ export function RegisterScreen({
         style={
           styles.termsCard
         }>
+        <LegalSummaryNotice
+          onViewMore={() => navigation.navigate('LegalInformation')}
+        />
+
         <Pressable
           style={
             styles.termsRow
           }
+          accessibilityRole="checkbox"
+          accessibilityState={{checked: acceptTerms}}
+          accessibilityLabel="Acepto el aviso de privacidad y los términos y condiciones"
           disabled={isBusy}
-          onPress={
-            showPrivacyNotice
-          }>
+          onPress={() => setAcceptTerms(!acceptTerms)}>
           <View
             style={[
               styles.checkbox,
@@ -823,9 +791,7 @@ export function RegisterScreen({
               style={
                 styles.termsText
               }>
-              {acceptTerms
-                ? 'Has leído y aceptado el aviso de privacidad. Toca aquí para volver a consultarlo.'
-                : 'Toca aquí para leer el aviso de privacidad antes de crear tu cuenta.'}
+              Acepto el aviso de privacidad y los términos y condiciones.
             </Text>
           </View>
         </Pressable>
