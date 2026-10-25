@@ -16,6 +16,7 @@ import { PublicStackParamList } from '../../src/navigation/types';
 import { course } from '../helpers/fixtures';
 
 jest.mock('../../src/config/dependencies', () => ({
+  legalRepository: { obtener: () => Promise.reject(new Error('offline')) },
   authRepository: {
     login: jest.fn(),
     sendRegistrationOtp: jest.fn(),

@@ -20,6 +20,7 @@ jest.mock('../../src/session/SessionContext', () => ({
   useSession: jest.fn(),
 }));
 jest.mock('../../src/config/dependencies', () => ({
+  legalRepository: { obtener: () => Promise.reject(new Error('offline')) },
   accountRepository: { requestDeletion: jest.fn() },
   profileRepository: { getProfile: jest.fn(), updateProfile: jest.fn() },
   notificationRepository: {

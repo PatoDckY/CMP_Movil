@@ -47,6 +47,11 @@ jest.mock('../../src/config/dependencies', () => ({
     save: jest.fn().mockResolvedValue(undefined),
   },
 }));
+// El render real de Markdown se cubre en LegalDocumentView.test.tsx.
+jest.mock('react-native-markdown-display', () => {
+  const { Text } = require('react-native');
+  return ({ children }: { children: string }) => <Text>{children}</Text>;
+});
 jest.mock('react-native-keyboard-controller', () => ({
   KeyboardAwareScrollView: jest.fn(
     ({ children }: { children: React.ReactNode }) => children,
@@ -275,40 +280,61 @@ describe('PF/ACC - rediseño institucional con componentes reales', () => {
     expect(button('Guardar cambios')).toBeDefined();
   });
 
-  test('privacidad tiene secciones legibles, scroll y carácter provisional explícito', async () => {
+  test('privacidad muestra los documentos legales del backend con versión y vigencia', async () => {
+    const legalRepository = {
+      obtener: jest.fn(async (tipo: string) => ({
+        tipo,
+        version: '1.0',
+        resumen: 'Resumen',
+        contenido: tipo === 'aviso_privacidad' ? '# Aviso oficial' : '# Términos oficiales',
+        vigenteDesde: '2026-10-24T21:01:12.147Z',
+      })),
+    };
     await act(async () => {
       renderer = ReactTestRenderer.create(
-        <LegalInformationScreen navigation={navigation} />,
+        <LegalInformationScreen
+          navigation={navigation}
+          repository={legalRepository as never}
+        />,
       );
     });
     expect(renderer.root.findAllByType(ScrollView)).toHaveLength(1);
-    expect(
-      renderer.root.findAllByType(AccountSection).map(node => node.props.title),
-    ).toEqual([
-      'Aviso de privacidad',
-      'Tratamiento y protección de datos personales',
-      'Derechos sobre tus datos',
-      'Uso de la aplicación',
-      'Términos y condiciones de uso',
-      'Solicitudes relacionadas con la cuenta',
-    ]);
     const text = visibleText();
-    expect(text).toContain('Centro Médico Pichardo');
-    expect(text).toContain('Información pendiente de aprobación institucional');
-    expect(text).toContain('no sustituye un aviso de privacidad');
-    expect(text).toContain('no registra la aceptación');
+    expect(text).toContain('Aviso oficial');
+    expect(text).toContain('Términos oficiales');
+    expect(text).toContain('Versión 1.0 — vigente desde 24/10/2026');
+    expect(text).not.toContain('provisional');
     expect(text).not.toContain(user.email);
-    expect(text).not.toContain(String(user.id));
-    expect(text).not.toMatch(/\bcliente\b|\bRol\b/);
-    expect(
-      renderer.root.findAll(
-        node => node.props.accessibilityRole === 'checkbox',
-      ),
-    ).toHaveLength(0);
     await act(async () =>
       button('Volver a la pantalla anterior').props.onPress(),
     );
     expect(navigation.goBack).toHaveBeenCalledTimes(1);
+  });
+
+  test('privacidad muestra error y reintenta', async () => {
+    const obtener = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('Sin conexión'))
+      .mockImplementation(async (tipo: string) => ({
+        tipo,
+        version: '1.0',
+        resumen: 'R',
+        contenido: '# Documento ' + tipo,
+        vigenteDesde: '2026-10-24T21:01:12.147Z',
+      }));
+    await act(async () => {
+      renderer = ReactTestRenderer.create(
+        <LegalInformationScreen
+          navigation={navigation}
+          repository={{ obtener } as never}
+        />,
+      );
+    });
+    expect(visibleText()).toContain('No se pudieron cargar los documentos');
+    expect(visibleText()).toContain('Sin conexión');
+    await act(async () => button('Reintentar').props.onPress());
+    expect(visibleText()).toContain('Documento aviso_privacidad');
+    expect(visibleText()).not.toContain('No se pudieron cargar');
   });
 
   test('A17 empieza protegida, sin confirmar y deshabilitada; ambas condiciones son obligatorias', async () => {
