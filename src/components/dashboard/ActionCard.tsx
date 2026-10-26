@@ -43,6 +43,7 @@ export function ActionCard({
       </View>
 
       <Pressable
+        accessibilityRole="button"
         style={({pressed}) => [
           styles.button,
           pressed && styles.pressed,

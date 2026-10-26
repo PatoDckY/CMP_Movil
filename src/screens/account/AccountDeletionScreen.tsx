@@ -164,7 +164,7 @@ export function AccountDeletionScreen({
                   accessibilityLiveRegion="assertive"
                   style={styles.errorBox}
                 >
-                  <Text style={styles.error}>{vm.error}</Text>
+                  <Text accessibilityRole="alert" style={styles.error}>{vm.error}</Text>
                 </View>
               ) : null}
               {vm.isSubmitting ? (
@@ -202,7 +202,7 @@ export function AccountDeletionScreen({
             </AccountSection>
           ) : (
             <View accessibilityRole="alert" style={styles.errorBox}>
-              <Text style={styles.error}>
+              <Text accessibilityRole="alert" style={styles.error}>
                 Inicia sesión con una cuenta autorizada para registrar esta
                 solicitud.
               </Text>

@@ -154,6 +154,8 @@ export function CatalogScreen(): React.JSX.Element {
         </Text>
 
         <Pressable
+          accessibilityRole="button"
+          hitSlop={6}
           style={({pressed}) => [
             styles.retryButton,
             pressed &&
@@ -233,6 +235,7 @@ export function CatalogScreen(): React.JSX.Element {
                   <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Limpiar búsqueda"
+                    hitSlop={8}
                     style={styles.clearButton}
                     onPress={() => setSearch('')}
                   >
@@ -379,7 +382,7 @@ export function CatalogScreen(): React.JSX.Element {
                 No encontramos cursos con los criterios seleccionados.
               </Text>
 
-              <Pressable onPress={() => resetCatalog()}>
+              <Pressable accessibilityRole="button" hitSlop={12} onPress={() => resetCatalog()}>
                 <Text style={styles.clearSearchLink}>
                   Limpiar búsqueda y filtros
                 </Text>

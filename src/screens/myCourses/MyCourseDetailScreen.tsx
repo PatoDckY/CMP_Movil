@@ -118,7 +118,7 @@ export function MyCourseDetailScreen({
     return (
       <ScrollView contentContainerStyle={styles.errorContainer}>
         <Text style={styles.errorTitle}>No fue posible cargar tu curso</Text>
-        <Text style={styles.errorText}>
+        <Text accessibilityRole="alert" style={styles.errorText}>
           {error ?? 'La información académica no está disponible.'}
         </Text>
         <PrimaryButton

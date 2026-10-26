@@ -130,7 +130,7 @@ function CourseDetailContent({
       <View style={styles.center}>
         <Text style={styles.errorTitle}>No pudimos cargar el curso</Text>
 
-        <Text style={styles.errorText}>
+        <Text accessibilityRole="alert" style={styles.errorText}>
           {error ?? 'Ocurrió un problema inesperado.'}
         </Text>
         <Pressable accessibilityRole="button" accessibilityLabel="Reintentar cargar el curso" style={styles.createAccountButton} onPress={() => loadCourse(courseId)}>

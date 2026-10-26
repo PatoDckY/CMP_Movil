@@ -24,6 +24,8 @@ export function CategoryCard({
 }: CategoryCardProps): React.JSX.Element {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityState={{expanded, disabled}}
       disabled={disabled}
       style={({pressed}) => [
         styles.card,

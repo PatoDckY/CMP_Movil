@@ -75,6 +75,7 @@ export function HomeScreen({
           </Text>
 
           <Pressable
+            accessibilityRole="button"
             style={({pressed}) => [
               styles.heroButton,
               pressed && styles.pressed,
@@ -216,6 +217,7 @@ export function HomeScreen({
           </Text>
 
           <Pressable
+            accessibilityRole="button"
             style={({pressed}) => [
               styles.loginButton,
               pressed && styles.pressed,
@@ -234,6 +236,8 @@ export function HomeScreen({
             </Text>
 
             <Pressable
+              accessibilityRole="button"
+              hitSlop={12}
               onPress={() =>
                 navigation.navigate('Register')
               }>

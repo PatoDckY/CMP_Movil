@@ -1105,6 +1105,7 @@ export function CreatePurchaseScreen({
         })}
 
         <Pressable
+          accessibilityRole="button"
           disabled={
             isLoading ||
             participants.length >=
@@ -1150,6 +1151,7 @@ export function CreatePurchaseScreen({
 
       {showObservations && (
         <TextInput
+          accessibilityLabel="Observaciones de la compra"
           style={
             styles.observationsInput
           }

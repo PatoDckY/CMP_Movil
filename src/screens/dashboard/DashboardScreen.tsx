@@ -42,6 +42,8 @@ export function DashboardScreen({
         </View>
 
         <Pressable
+          accessibilityRole="button"
+          hitSlop={6}
           style={styles.accountButton}
           onPress={() =>
             navigation.navigate('Account')
@@ -72,6 +74,7 @@ export function DashboardScreen({
         </Text>
 
         <Pressable
+          accessibilityRole="button"
           style={({pressed}) => [
             styles.heroButton,
             pressed && styles.pressed,
@@ -154,6 +157,7 @@ export function DashboardScreen({
         </View>
 
         <Pressable
+          accessibilityRole="button"
           style={({pressed}) => [
             styles.profileButton,
             pressed && styles.pressed,
