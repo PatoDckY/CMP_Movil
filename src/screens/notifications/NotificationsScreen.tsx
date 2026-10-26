@@ -176,6 +176,7 @@ export function NotificationsScreen(
 
           <Pressable
             accessibilityRole="button"
+            hitSlop={6}
             style={styles.retryButton}
             onPress={() => {
               void load();

@@ -108,7 +108,7 @@ export function ChangePasswordScreen(_props: Props): React.JSX.Element {
             accessibilityLiveRegion="assertive"
             style={styles.errorBox}
           >
-            <Text style={styles.error}>{vm.error}</Text>
+            <Text accessibilityRole="alert" style={styles.error}>{vm.error}</Text>
           </View>
         ) : null}
 

@@ -1,6 +1,7 @@
 
 import React, {
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import {
@@ -36,6 +37,8 @@ export function LoginScreen({
     showPassword,
     setShowPassword,
   ] = useState(false);
+
+  const passwordInputRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   const {
     setAuthenticatedUser,
@@ -214,8 +217,11 @@ export function LoginScreen({
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
+          autoComplete="email"
+          textContentType="emailAddress"
           editable={!isLoading}
           returnKeyType="next"
+          onSubmitEditing={() => passwordInputRef.current?.focus()}
           style={styles.input}
         />
 
@@ -231,6 +237,7 @@ export function LoginScreen({
             styles.passwordContainer
           }>
           <TextInput
+            ref={passwordInputRef}
             accessibilityLabel="Contraseña"
             value={password}
             onChangeText={
@@ -245,6 +252,8 @@ export function LoginScreen({
             }
             autoCapitalize="none"
             autoCorrect={false}
+            autoComplete="current-password"
+            textContentType="password"
             editable={!isLoading}
             returnKeyType="done"
             onSubmitEditing={

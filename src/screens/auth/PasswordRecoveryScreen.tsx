@@ -181,7 +181,7 @@ export function PasswordRecoveryScreen({
 
           {state === 'error' && error && (
             <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
+              <Text accessibilityRole="alert" style={styles.errorText}>
                 {error}
               </Text>
             </View>

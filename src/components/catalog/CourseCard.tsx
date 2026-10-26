@@ -27,6 +27,7 @@ export function CourseCard({
 
   return (
     <Pressable
+      accessibilityRole="button"
       style={({pressed}) => [
         styles.card,
         pressed && styles.pressed,

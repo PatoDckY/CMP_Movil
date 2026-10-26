@@ -1266,6 +1266,7 @@ export function PurchaseDetailScreen({
                   </Text>
 
                   <TextInput
+                    accessibilityLabel="Monto pagado en pesos mexicanos"
                     style={styles.formInput}
                     value={amount}
                     onChangeText={updateAmount}
@@ -1342,6 +1343,7 @@ export function PurchaseDetailScreen({
                   </Text>
 
                   <TextInput
+                    accessibilityLabel="Referencia del pago (opcional)"
                     style={styles.formInput}
                     value={reference}
                     onChangeText={setReference}
@@ -1488,6 +1490,7 @@ export function PurchaseDetailScreen({
                   </Text>
 
                   <TextInput
+                    accessibilityLabel="Observaciones del pago (opcional)"
                     style={[
                       styles.formInput,
                       styles.formTextarea,

@@ -818,6 +818,7 @@ export function RegisterScreen({
       </View>
 
       <Pressable
+        accessibilityRole="button"
         style={({pressed}) => [
           styles.createButton,
           pressed &&
@@ -900,6 +901,7 @@ export function RegisterScreen({
       </View>
 
       <Pressable
+        accessibilityRole="button"
         style={
           styles.homeButton
         }

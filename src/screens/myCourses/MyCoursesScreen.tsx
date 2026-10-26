@@ -433,7 +433,7 @@ export function MyCoursesScreen({
             No fue posible cargar tus cursos
           </Text>
 
-          <Text style={styles.errorText}>
+          <Text accessibilityRole="alert" style={styles.errorText}>
             {error ??
               'Ocurrió un problema al consultar las inscripciones.'}
           </Text>

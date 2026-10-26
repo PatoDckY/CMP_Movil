@@ -20,6 +20,8 @@ export function GenderButton({
 }: GenderButtonProps): React.JSX.Element {
   return (
     <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{selected}}
       style={({pressed}) => [
         styles.button,
         selected && styles.buttonSelected,

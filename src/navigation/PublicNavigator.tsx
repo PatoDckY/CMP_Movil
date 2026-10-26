@@ -42,6 +42,8 @@ function AccessButton({
 }: AccessButtonProps): React.JSX.Element {
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Acceder"
       hitSlop={10}
       onPress={onPress}>
       <Text style={styles.accessText}>

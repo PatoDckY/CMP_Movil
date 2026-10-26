@@ -324,7 +324,7 @@ export function PersonalDataScreen():
 
                 {error ? (
                     <View style={styles.errorBox}>
-                        <Text style={styles.errorText}>
+                        <Text accessibilityRole="alert" style={styles.errorText}>
                             {error}
                         </Text>
                     </View>
