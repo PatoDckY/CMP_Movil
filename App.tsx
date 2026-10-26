@@ -47,12 +47,8 @@ function App(): React.JSX.Element {
           );
         }
       })
-      .catch(error => {
-        console.error(
-          'Error inicializando Certificate Pinning:',
-          error,
-        );
-
+      .catch(() => {
+        // Sin registro del error: la pantalla de bloqueo ya informa el fallo.
         if (mounted) {
           setPinningStatus(
             'error',
