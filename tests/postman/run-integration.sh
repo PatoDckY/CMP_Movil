@@ -2,7 +2,7 @@
 # Ejecuta la colección de integración con Postman CLI y deja los reportes en tests/postman/results/.
 # Requeridas: CMP_PASSWORD_A, CMP_PASSWORD_B, CMP_COURSE_ID.
 # Opcionales: CMP_BASE_URL, CMP_EMAIL_A, CMP_EMAIL_B, CMP_ENABLE_PURCHASE (true|false, por defecto false),
-# CMP_EXPECTED_PROGRESS (por defecto 50).
+# CMP_EXPECTED_PROGRESS (por defecto 50), CMP_PURCHASE_ID_A (compra sembrada de A) y CMP_NOTIFICATION_ID_A (notificación sembrada de A).
 set -eu
 cd "$(dirname "$0")"
 : "${CMP_PASSWORD_A:?Falta CMP_PASSWORD_A}" "${CMP_PASSWORD_B:?Falta CMP_PASSWORD_B}" "${CMP_COURSE_ID:?Falta CMP_COURSE_ID}"
@@ -16,6 +16,8 @@ exec postman collection run cmp-integration.postman_collection.json \
   --env-var "courseId=${CMP_COURSE_ID}" \
   --env-var "expectedProgress=${CMP_EXPECTED_PROGRESS:-50}" \
   --env-var "enablePurchase=${CMP_ENABLE_PURCHASE:-false}" \
+  --env-var "purchaseIdA=${CMP_PURCHASE_ID_A:-}" \
+  --env-var "notificationIdA=${CMP_NOTIFICATION_ID_A:-}" \
   -r cli,junit,html \
   --reporter-junit-export results/junit.xml \
   --reporter-html-export results/report.html
