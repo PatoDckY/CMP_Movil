@@ -1,0 +1,1518 @@
+{
+  "info": {
+    "name": "CMP_Movil — Pruebas de integración (#92)",
+    "description": "Flujos multi-módulo contra la API de CMP_Site. Variables en environment.example.json; datos sembrados con sql/seed.sql.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://cmp-site.vercel.app/api"
+    },
+    {
+      "key": "emailA",
+      "value": ""
+    },
+    {
+      "key": "passwordA",
+      "value": ""
+    },
+    {
+      "key": "emailB",
+      "value": ""
+    },
+    {
+      "key": "passwordB",
+      "value": ""
+    },
+    {
+      "key": "courseId",
+      "value": ""
+    },
+    {
+      "key": "expectedProgress",
+      "value": "50"
+    },
+    {
+      "key": "runId",
+      "value": ""
+    },
+    {
+      "key": "enablePurchase",
+      "value": "false"
+    },
+    {
+      "key": "expiredToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Catálogo público",
+      "item": [
+        {
+          "name": "GET /cursos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Es un arreglo no vacío', () => pm.expect(b).to.be.an('array').that.is.not.empty);",
+                  "pm.test('Cada curso cumple el contrato CourseDto', () => b.forEach(c => {\n      pm.expect(c.idCurso).to.be.a('number');\n      pm.expect(c.tituloCurso).to.be.a('string');\n      pm.expect(c.fechaInicio).to.match(/^\\d{4}-\\d{2}-\\d{2}$/);\n      pm.expect(c.cupoMaximo).to.be.a('number');\n      pm.expect(c.activo).to.be.a('boolean');\n    }));",
+                  "pm.test('El curso de prueba (courseId) está en el catálogo', () => pm.expect(b.map(c => String(c.idCurso))).to.include(String(pm.variables.get('courseId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cursos/{id}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Detalle coincide con el solicitado', () => { pm.expect(String(b.idCurso)).to.equal(String(pm.variables.get('courseId'))); pm.expect(b.tituloCurso).to.be.a('string'); pm.expect(b).to.have.property('costo'); pm.expect(b).to.have.property('cupoMaximo'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cursos/{{courseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cursos",
+                "{{courseId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Registro (solo validaciones, no crea cuentas)",
+      "item": [
+        {
+          "name": "POST /auth/send-otp sin correo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Error explícito', () => pm.expect(b.error).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/send-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "send-otp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/send-otp con correo ya registrado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Informa correo ya registrado (la cuenta A persiste)', () => pm.expect(b.error).to.match(/registrado/i));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{emailA}}\",\n  \"nombre\": \"Prueba QA\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/send-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "send-otp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/register incompleto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Faltan campos obligatorios', () => pm.expect(b.message).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"qa-no-existe@example.test\",\n  \"codigoVerificacion\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Autenticación y sesión (cuenta A)",
+      "item": [
+        {
+          "name": "POST /auth/mobile/login con correo inexistente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('runId', String(Date.now()));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin tokens', () => pm.expect(b).to.not.have.property('accessToken'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"nadie-{{runId}}@example.test\",\n  \"contrasena\": \"Inexistente#2026\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/login cuenta A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Tokens Bearer y usuario', () => {\n        pm.expect(b.accessToken).to.be.a('string').and.not.empty;\n        pm.expect(b.refreshToken).to.be.a('string').and.not.empty;\n        pm.expect(b.tokenType).to.equal('Bearer');\n        pm.expect(b.expiresIn).to.be.a('number');\n        pm.expect(b.usuario.id).to.be.a('number');\n        pm.expect(b.usuario.correo).to.equal(pm.variables.get('emailA'));\n        pm.expect(b.usuario.rol).to.be.a('string');\n      });",
+                  "pm.collectionVariables.set('tokenA', b.accessToken); pm.collectionVariables.set('refreshA', b.refreshToken); pm.collectionVariables.set('userIdA', String(b.usuario.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{emailA}}\",\n  \"contrasena\": \"{{passwordA}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/check-session (A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sesión válida del mismo usuario', () => { pm.expect(b.ok).to.equal(true); pm.expect(String(b.usuario.id)).to.equal(pm.variables.get('userIdA')); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-session"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /profile (A) — ruta protegida 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Perfil del mismo correo', () => pm.expect(JSON.stringify(b)).to.include(pm.variables.get('emailA')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/notificaciones (A) — ruta protegida 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Contrato de notificaciones', () => { pm.expect(b.notifications).to.be.an('array'); pm.expect(b.unreadCount).to.be.a('number'); pm.expect(b.page).to.equal(1); pm.expect(b.total).to.be.a('number'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/notificaciones?page=1&pageSize=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "notificaciones?page=1&pageSize=5"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos (A) — ruta protegida 3",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Contrato de listado', () => { pm.expect(b.compras).to.be.an('array'); pm.expect(b.total).to.be.a('number'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Nuevo accessToken', () => pm.expect(b.accessToken).to.be.a('string').and.not.empty);",
+                  "if (b && b.accessToken) pm.collectionVariables.set('tokenA', b.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshA}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/check-session tras refresh (A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('La sesión sigue vigente con el token renovado', () => pm.expect(b.ok).to.equal(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-session"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Compra y reporte de pago (cuenta A) — opt-in: enablePurchase=true",
+      "item": [
+        {
+          "name": "GET /metodos-pago-cursos",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('enablePurchase') !== 'true') { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Contrato de métodos', () => { pm.expect(b.metodos).to.be.an('array').that.is.not.empty; b.metodos.forEach(m => { pm.expect(m.idMetodoPago).to.be.a('number'); pm.expect(m.nombre).to.be.a('string'); }); });",
+                  "pm.collectionVariables.set('metodoPagoId', String((b.metodos.find(m => !m.requiereComprobante) || b.metodos[0]).idMetodoPago));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/metodos-pago-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "metodos-pago-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /compras-cursos (reserva)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('enablePurchase') !== 'true') { pm.execution.skipRequest(); }",
+                  "pm.request.body.raw = pm.request.body.raw.replace('\"{{courseId}}\"', pm.variables.get('courseId'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 o 200', () => pm.expect([201,200]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Compra pendiente de pago, del usuario A y del curso pedido', () => {\n        pm.expect(b.compra.idCompra).to.be.a('number');\n        pm.expect(b.compra.folioCompra).to.be.a('string');\n        pm.expect(b.compra.estado).to.equal('Pendiente de pago');\n        pm.expect(String(b.compra.usuarioId)).to.equal(pm.variables.get('userIdA'));\n        pm.expect(String(b.compra.cursoId)).to.equal(String(pm.variables.get('courseId')));\n        pm.expect(b.participantes).to.have.length(1);\n      });",
+                  "pm.collectionVariables.set('purchaseId', String(b.compra.idCompra)); pm.collectionVariables.set('purchaseTotal', String(b.compra.total));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cursoId\": \"{{courseId}}\",\n  \"cantidadCupos\": 1,\n  \"observacionesUsuario\": \"QA integración #92 {{runId}}\",\n  \"participantes\": [\n    {\n      \"participante\": {\n        \"nombre\": \"QA\",\n        \"apellidoPaterno\": \"Integracion\",\n        \"apellidoMaterno\": \"Run{{runId}}\",\n        \"fechaNacimiento\": \"1990-01-01\",\n        \"sexo\": \"Prefiere no indicar\",\n        \"telefono\": \"5500000000\",\n        \"correo\": \"qa-part-{{runId}}@example.test\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos (A) incluye la reserva",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('enablePurchase') !== 'true') { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('La compra aparece en el historial de A', () => pm.expect(b.compras.map(c => String(c.idCompra))).to.include(pm.variables.get('purchaseId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /compras-cursos/{id}/pagos (reporte sin comprobante)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('enablePurchase') !== 'true') { pm.execution.skipRequest(); }",
+                  "pm.collectionVariables.set('today', new Date().toISOString().slice(0, 10)); const r = pm.request.body.raw; pm.request.body.raw = r.replace('\"{{metodoPagoId}}\"', pm.variables.get('metodoPagoId')).replace('{{purchaseTotal}}', pm.variables.get('purchaseTotal'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201 o 200', () => pm.expect([201,200]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Pago reportado, no validado', () => { pm.expect(b.estadoCompra).to.equal('Pago reportado'); pm.expect(b.pago.idCompra).to.be.a('number'); pm.expect(b.pago.estado).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idMetodoPago\": \"{{metodoPagoId}}\",\n  \"monto\": \"{{purchaseTotal}}\",\n  \"fechaPago\": \"{{today}}\",\n  \"referencia\": \"QA-{{runId}}\",\n  \"canalComprobante\": \"Sin comprobante\",\n  \"rutaComprobante\": null,\n  \"nombreArchivoOriginal\": null,\n  \"tipoArchivo\": null,\n  \"comprobanteConfirmado\": false,\n  \"fechaEnvioWhatsapp\": null,\n  \"observaciones\": \"Prueba de integración #92\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos/{{purchaseId}}/pagos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos",
+                "{{purchaseId}}",
+                "pagos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos/{id} refleja el pago",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('enablePurchase') !== 'true') { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Detalle con pago y resumen', () => { pm.expect(b.compra.estado).to.equal('Pago reportado'); pm.expect(b.pagos).to.have.length(1); pm.expect(b.resumenPago.pagoCompletoReportado).to.equal(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos/{{purchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos",
+                "{{purchaseId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Mis cursos, materiales y progreso (cuenta A)",
+      "item": [
+        {
+          "name": "GET /cliente/mis-cursos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Contrato MyCoursesResponse', () => {\n      pm.expect(b.success).to.equal(true);\n      pm.expect(b.resumen.totalInscripciones).to.equal(b.cursos.length);\n      b.cursos.forEach(c => {\n        ['idInscripcion', 'idCurso', 'sesionesTotales', 'sesionesCompletadas', 'porcentajeAvance', 'porcentajeAsistencia'].forEach(k => pm.expect(Number(c[k]), k).to.not.be.NaN);\n        pm.expect(c.tituloCurso).to.be.a('string');\n        pm.expect(c.estadoInscripcion).to.be.a('string');\n        pm.expect(Number(c.porcentajeAvance)).to.be.within(0, 100);\n      });\n    });",
+                  "const mine = b.cursos.filter(c => String(c.idCurso) === String(pm.variables.get('courseId')));\n     pm.test('El curso inscrito (sembrado) aparece en Mis cursos de A', () => pm.expect(mine).to.have.length(1));\n     pm.test('La reserva sin validar NO genera una inscripción adicional', () => pm.expect(mine).to.have.length(1));\n     if (mine.length) {\n       const c = mine[0];\n       pm.collectionVariables.set('enrollmentId', String(c.idInscripcion));\n       pm.collectionVariables.set('progressList', JSON.stringify({t: Number(c.sesionesTotales), d: Number(c.sesionesCompletadas), p: Number(c.porcentajeAvance)}));\n       pm.test('Avance coincide con el sembrado en PostgreSQL', () => pm.expect(Number(c.porcentajeAvance)).to.equal(Number(pm.variables.get('expectedProgress'))));\n     }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Detalle de la misma inscripción', () => { pm.expect(b.success).to.equal(true); pm.expect(String(b.curso.idInscripcion)).to.equal(pm.variables.get('enrollmentId')); });",
+                  "pm.test('El avance del detalle coincide con el de la lista', () => {\n      const l = JSON.parse(pm.variables.get('progressList'));\n      const d = b.curso;\n      pm.expect(Number(d.sesionesTotales ?? d.progreso?.sesionesTotales)).to.equal(l.t);\n      pm.expect(Number(d.sesionesCompletadas ?? d.progreso?.sesionesCompletadas)).to.equal(l.d);\n      pm.expect(Number(d.porcentajeAvance ?? d.progreso?.porcentajeAvance)).to.equal(l.p);\n    });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/{{enrollmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "{{enrollmentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id}/materiales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Acceso autorizado y estado válido', () => { pm.expect(b.success).to.equal(true); pm.expect(String(b.idInscripcion)).to.equal(pm.variables.get('enrollmentId')); pm.expect(['disponible', 'no_iniciado', 'finalizado', 'sin_materiales']).to.include(b.estado); });",
+                  "pm.test('Si hay enlace es una carpeta HTTPS de Drive', () => { if (b.estado === 'disponible') pm.expect(b.url).to.match(/^https:\\/\\/drive\\.google\\.com\\//); else pm.expect(b.url).to.equal(undefined); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/{{enrollmentId}}/materiales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "{{enrollmentId}}",
+                "materiales"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Aislamiento entre cuentas (cuenta B)",
+      "item": [
+        {
+          "name": "POST /auth/mobile/login cuenta B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Respuesta JSON', () => pm.expect(b).to.not.equal(null));",
+                  "pm.test('Sesión distinta a la de A', () => { pm.expect(b.usuario.id).to.be.a('number'); pm.expect(String(b.usuario.id)).to.not.equal(pm.variables.get('userIdA')); });",
+                  "pm.collectionVariables.set('tokenB', b.accessToken); pm.collectionVariables.set('userIdB', String(b.usuario.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{emailB}}\",\n  \"contrasena\": \"{{passwordB}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos (B) no ve el curso de A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Ninguna inscripción de A', () => pm.expect(b.cursos.map(c => String(c.idInscripcion))).to.not.include(pm.variables.get('enrollmentId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id de A} con token de B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin datos de otro usuario', () => { const t = pm.response.text(); pm.expect(t).to.not.include(pm.variables.get('emailA')); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/{{enrollmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "{{enrollmentId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id de A}/materiales con token de B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin datos de otro usuario', () => { const t = pm.response.text(); pm.expect(t).to.not.include(pm.variables.get('emailA')); });",
+                  "pm.test('No se filtra el enlace de Drive', () => pm.expect(pm.response.text()).to.not.include('drive.google.com'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/{{enrollmentId}}/materiales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "{{enrollmentId}}",
+                "materiales"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos/{id de A} con token de B",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('purchaseId')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin datos de otro usuario', () => { const t = pm.response.text(); pm.expect(t).to.not.include(pm.variables.get('emailA')); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos/{{purchaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos",
+                "{{purchaseId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos (B) no lista la compra de A",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('purchaseId')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin la compra de A', () => pm.expect(b.compras.map(c => String(c.idCompra))).to.not.include(pm.variables.get('purchaseId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos (A) sigue intacto tras usar B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('A conserva su inscripción', () => pm.expect(b.cursos.map(c => String(c.idInscripcion))).to.include(pm.variables.get('enrollmentId')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Token inválido, expirado y cierre de sesión",
+      "item": [
+        {
+          "name": "GET /cliente/mis-cursos sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Mensaje de no autenticado', () => pm.expect(b.message || b.error).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos con token basura",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('garbageToken', 'token-invalido');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{garbageToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos con JWT expirado (exp=1)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('expiredToken')) pm.collectionVariables.set('expiredToken', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxfQ.firma-invalida');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{expiredToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/check-session con token inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('ok=false', () => pm.expect(b.ok).to.equal(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{garbageToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-session"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id}/materiales sin token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin enlace de Drive', () => pm.expect(pm.response.text()).to.not.include('drive.google.com'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/{{enrollmentId}}/materiales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "{{enrollmentId}}",
+                "materiales"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/refresh con refreshToken inválido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"no-es-un-jwt\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/logout (A)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /auth/check-session con el token de A ya revocado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/check-session",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "check-session"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/logout (B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

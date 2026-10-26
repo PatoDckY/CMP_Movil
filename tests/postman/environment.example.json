@@ -1,0 +1,60 @@
+{
+  "id": "cmp-integration-example",
+  "name": "CMP integración — ejemplo",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://cmp-site.vercel.app/api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "emailA",
+      "value": "qa-integracion-a@example.test",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "passwordA",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "emailB",
+      "value": "qa-integracion-b@example.test",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "passwordB",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "courseId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "expectedProgress",
+      "value": "50",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "expiredToken",
+      "value": "",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "enablePurchase",
+      "value": "false",
+      "type": "default",
+      "enabled": true
+    }
+  ]
+}
