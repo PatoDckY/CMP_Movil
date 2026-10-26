@@ -101,7 +101,17 @@ Estado: **pendiente**. El workflow `.github/workflows/integration.yml` nunca se 
 2. **Crear los secrets** en GitHub: repositorio → Settings → Secrets and variables → Actions → pestaña Secrets → New repository secret.
    - `CMP_IT_PASSWORD_A`: contraseña de la cuenta `qa-integracion-a@example.test`.
    - `CMP_IT_PASSWORD_B`: contraseña de la cuenta `qa-integracion-b@example.test`.
-   - De dónde sale la contraseña: es la que se eligió al sembrar las cuentas (el `seed.sql` guarda solo su hash bcrypt, así que no se puede recuperar de la base ni del repositorio). Está en la conversación donde se sembraron las cuentas o en el gestor de contraseñas del equipo. Si se perdió, se genera un hash nuevo (paso 1 de Ejecución) y se actualiza `seguridad.usuarios.contrasena` de las dos cuentas de prueba, y se usa esa contraseña en los secrets. No se escribe en archivos ni en el repositorio.
+   - Valor: ambas cuentas ficticias usan la misma contraseña de prueba, `QaInteg2026!Test` (confirmada con la corrida real del 2026-10-26: el login de A y B respondió 200). `seed.sql` solo guarda su hash bcrypt. Son cuentas sin datos reales en producción; si se rota la contraseña, actualizar `seguridad.usuarios.contrasena` de las dos y los secrets.
+   - Corrida local equivalente (Git Bash):
+
+```bash
+cd tests/postman
+export CMP_PASSWORD_A="QaInteg2026!Test"
+export CMP_PASSWORD_B="QaInteg2026!Test"
+export CMP_COURSE_ID="2502"
+export CMP_ENABLE_PURCHASE="false"
+bash run-integration.sh
+```
 3. **Crear la variable** (no es secreto): misma pantalla, pestaña Variables → New repository variable. `CMP_IT_COURSE_ID` = `2502` (curso en el que está inscrita la cuenta A).
 4. **Lanzar el workflow:** pestaña Actions → "Pruebas de integración (Postman CLI)" → Run workflow → rama `main`. Dejar `enable_purchase` en **false** (la compra escribe en producción y no se limpia sola).
 5. **Resultado esperado:** igual que la corrida local, 30 solicitudes y 69 aserciones sin fallos. Los reportes quedan como artefacto `reportes-postman` (14 días). Anotar aquí fecha y resultado.
