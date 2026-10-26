@@ -15,7 +15,7 @@ Corrida del 2026-10-26 (UTC) con Postman CLI contra `https://cmp-site.vercel.app
 | 4. Mis cursos, materiales, progreso | Pasa | 3: lista, detalle (inscripción 6), materiales |
 | 5. Aislamiento (B) | Pasa | 5 ejecutadas: B no ve la inscripción; detalle y materiales de A con token de B → 404 sin enlace de Drive; A intacto. Las 2 de compras se omitieron (dependen de la carpeta 3) |
 | 6. Token inválido y cierre de sesión | Pasa | 9: sin token, basura, JWT `exp=1`, check-session, materiales, refresh inválido → 401; logout de A y B → 200; token revocado → 401 |
-| 7. Aislamiento extendido (#102) | **Pendiente de corrida real** (verificada solo contra un servidor simulado: 51 solicitudes y 112 aserciones en verde con compra y notificación sembradas; 41 y 90 con los casos opcionales omitidos). Requiere resembrar las cuentas | 12 solicitudes: perfil, notificaciones, compra y materiales de otra cuenta con el token de B |
+| 7. Aislamiento extendido (#102) | **Pasa** (corrida real 2026-10-26: colección completa con `enablePurchase=false`, 44 solicitudes y 96 aserciones, 0 fallos; la carpeta 7 aporta 14 solicitudes y 27 aserciones) | 14: login B y A, perfil con y sin `?id=`, notificaciones de A y de B con y sin `?usuarioId=`, `PATCH` de notificación ajena → 404, compra 2631 de A (detalle → 404, listado de B sin ella), materiales de inscripción ajena (7) e inexistente → 404, logout de B y A |
 
 Persistencia en PostgreSQL (consulta de solo lectura por Neon, equivalente a `verify.sql`): A existe, rol 1, activa, inscripción 6 en el curso 2502 (`activo`) con 4/2 sesiones y `porcentaje_avance` 50.00, 0 compras; B existe, activa, sin inscripciones ni compras. Coincide con lo que devolvió la API.
 
@@ -63,7 +63,9 @@ Variables: `CMP_BASE_URL` (por defecto la API de producción), `CMP_EMAIL_A/B`, 
 
 Los datos por corrida son únicos (`runId` con marca de tiempo en participante, referencia y observaciones). Las cuentas A/B son fijas porque se siembran; repetir tras una corrección no requiere resembrar, salvo tras limpiar. El logout final revoca los tokens de ambas cuentas.
 
-### Siembra para la carpeta 7
+### Siembra y resultado de la carpeta 7
+
+Sembrado en Neon por el equipo: A = usuario 1036 con inscripción 7 en el curso 2502 (50 %), notificación 4 (`Enviada`) y compra 2631; B = usuario 1037 sin datos. Corrida con `CMP_PURCHASE_ID_A=2631` y `CMP_NOTIFICATION_ID_A=4`. Comprobación posterior de solo lectura en PostgreSQL: la notificación 4 sigue sin `fecha_lectura` (el `PATCH` de B no la tocó), la compra 2631 sigue siendo de 1036 sin pagos añadidos y la inscripción 7 de 1036. La carpeta 3 no se ejecutó, por eso el total es 44 y no 51 solicitudes.
 
 Variables opcionales: `purchaseIdA` (o `CMP_PURCHASE_ID_A`) y `notificationIdA` (`CMP_NOTIFICATION_ID_A`). Sin ellas, los casos de compra y del `PATCH` se omiten (no fallan). Con la siembra mínima (sin compra) corren 11 de las 12 solicitudes con aserciones útiles; la compra requiere sembrarla aparte. Qué sembrar en Neon: cuentas A y B (rol 1, activas), inscripción y avance de A en el curso 2502 (como `seed.sql`), al menos una notificación de A en estado visible ligada a esa inscripción y, para el caso de compras, una compra de A con su participante.
 
