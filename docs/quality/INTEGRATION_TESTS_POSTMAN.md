@@ -89,4 +89,30 @@ Ninguno en la API en los casos ejecutados. Hallazgos de diseño de pruebas:
 
 ## Pendiente
 
-Carpeta 3 (compra y reporte de pago): requiere un entorno aislado o aceptar la limpieza manual de cupos y movimientos en producción. Workflow de GitHub Actions sin ejecutar. Review cruzado de Luis.
+- Carpeta 3 (compra y reporte de pago): requiere un entorno aislado o aceptar la limpieza manual de cupos y movimientos en producción.
+- Primera ejecución del workflow de GitHub Actions (paso a paso abajo).
+- Review cruzado de Luis: hecho en #151.
+
+### Paso a paso: ejecutar el workflow `Pruebas de integración (Postman CLI)`
+
+Estado: **pendiente**. El workflow `.github/workflows/integration.yml` nunca se ha ejecutado.
+
+1. **Llevar el workflow a `main`.** GitHub solo muestra "Run workflow" de un `workflow_dispatch` si el archivo está en la rama por defecto (`main`). Hoy está solo en `develop`. Se resuelve con el siguiente merge de `develop` a `main` (o con un PR pequeño a `main` solo con ese archivo).
+2. **Crear los secrets** en GitHub: repositorio → Settings → Secrets and variables → Actions → pestaña Secrets → New repository secret.
+   - `CMP_IT_PASSWORD_A`: contraseña de la cuenta `qa-integracion-a@example.test`.
+   - `CMP_IT_PASSWORD_B`: contraseña de la cuenta `qa-integracion-b@example.test`.
+   - Valor: ambas cuentas ficticias usan la misma contraseña de prueba, `QaInteg2026!Test` (confirmada con la corrida real del 2026-10-26: el login de A y B respondió 200). `seed.sql` solo guarda su hash bcrypt. Son cuentas sin datos reales en producción; si se rota la contraseña, actualizar `seguridad.usuarios.contrasena` de las dos y los secrets.
+   - Corrida local equivalente (Git Bash):
+
+```bash
+cd tests/postman
+export CMP_PASSWORD_A="QaInteg2026!Test"
+export CMP_PASSWORD_B="QaInteg2026!Test"
+export CMP_COURSE_ID="2502"
+export CMP_ENABLE_PURCHASE="false"
+bash run-integration.sh
+```
+3. **Crear la variable** (no es secreto): misma pantalla, pestaña Variables → New repository variable. `CMP_IT_COURSE_ID` = `2502` (curso en el que está inscrita la cuenta A).
+4. **Lanzar el workflow:** pestaña Actions → "Pruebas de integración (Postman CLI)" → Run workflow → rama `main`. Dejar `enable_purchase` en **false** (la compra escribe en producción y no se limpia sola).
+5. **Resultado esperado:** igual que la corrida local, 30 solicitudes y 69 aserciones sin fallos. Los reportes quedan como artefacto `reportes-postman` (14 días). Anotar aquí fecha y resultado.
+6. **Si falla la instalación o el login de Postman CLI** en el runner: crear el secret `POSTMAN_API_KEY` (Postman → Settings → API keys) y agregar al workflow un paso `postman login --with-api-key "$POSTMAN_API_KEY"` antes de ejecutar la colección. En local funcionó porque la sesión ya estaba iniciada.
