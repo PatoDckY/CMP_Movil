@@ -44,6 +44,14 @@
     {
       "key": "expiredToken",
       "value": ""
+    },
+    {
+      "key": "purchaseIdA",
+      "value": ""
+    },
+    {
+      "key": "notificationIdA",
+      "value": ""
     }
   ],
   "item": [
@@ -1497,6 +1505,591 @@
               {
                 "key": "Authorization",
                 "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "logout"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Aislamiento extendido (cuenta B)",
+      "item": [
+        {
+          "name": "POST /auth/mobile/login cuenta B (sesión nueva)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sesión de B', () => { pm.expect(b.usuario.correo).to.equal(pm.variables.get('emailB')); pm.expect(String(b.usuario.id)).to.not.equal(pm.variables.get('userIdA')); });",
+                  "pm.collectionVariables.set('tokenB', b.accessToken); pm.collectionVariables.set('userIdB', String(b.usuario.id));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{emailB}}\",\n  \"contrasena\": \"{{passwordB}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /profile con token de B devuelve a B",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Perfil de B, nunca el de A', () => { const t = JSON.stringify(b); pm.expect(t).to.include(pm.variables.get('emailB')); pm.expect(t).to.not.include(pm.variables.get('emailA')); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /profile?id=<A> con token de B ignora el parámetro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sigue siendo el perfil de B', () => { const t = JSON.stringify(b); pm.expect(t).to.include(pm.variables.get('emailB')); pm.expect(t).to.not.include(pm.variables.get('emailA')); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/profile?id={{userIdA}}&usuarioId={{userIdA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "profile"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "{{userIdA}}"
+                },
+                {
+                  "key": "usuarioId",
+                  "value": "{{userIdA}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/login cuenta A (línea base de notificaciones)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.collectionVariables.set('tokenA2', b.accessToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{emailA}}\",\n  \"contrasena\": \"{{passwordA}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/notificaciones (A) línea base",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Contrato', () => { pm.expect(b.notifications).to.be.an('array'); pm.expect(b.total).to.be.a('number'); });",
+                  "pm.collectionVariables.set('notificationIdsA', JSON.stringify(b.notifications.map(n => n.id)));",
+                  "pm.test('A tiene al menos una notificación (si no, el aislamiento solo se comprueba por parámetros)', () => pm.expect(b.notifications.length).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA2}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/notificaciones?page=1&pageSize=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/notificaciones con token de B no incluye las de A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Ninguna notificación de A', () => { const a = JSON.parse(pm.variables.get('notificationIdsA') || '[]'); const ids = b.notifications.map(n => n.id); a.forEach(id => pm.expect(ids).to.not.include(id)); });",
+                  "pm.test('Total de B coherente con su lista', () => pm.expect(b.total).to.be.at.least(b.notifications.length));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/notificaciones?page=1&pageSize=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/notificaciones?usuarioId=<A> con token de B ignora el parámetro",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Nada de A aunque se pida por parámetro', () => { const a = JSON.parse(pm.variables.get('notificationIdsA') || '[]'); const ids = b.notifications.map(n => n.id); a.forEach(id => pm.expect(ids).to.not.include(id)); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/notificaciones?page=1&pageSize=50&usuarioId={{userIdA}}&userId={{userIdA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "notificaciones"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                },
+                {
+                  "key": "usuarioId",
+                  "value": "{{userIdA}}"
+                },
+                {
+                  "key": "userId",
+                  "value": "{{userIdA}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /cliente/notificaciones/{id de A}/leida con token de B",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('notificationIdA')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('No marca ni devuelve la notificación ajena', () => pm.expect(b && b.readAt).to.not.be.ok);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/notificaciones/{{notificationIdA}}/leida",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "notificaciones",
+                "{{notificationIdA}}",
+                "leida"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos/{id de compra de A} con token de B",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = (pm.variables.get('purchaseIdA') || pm.variables.get('purchaseId')); if (!id) { pm.execution.skipRequest(); } else { pm.collectionVariables.set('purchaseIdEff', String(id)); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin datos de A', () => pm.expect(pm.response.text()).to.not.include(pm.variables.get('emailA')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos/{{purchaseIdEff}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos",
+                "{{purchaseIdEff}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /compras-cursos (B) no lista la compra de A",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!(pm.variables.get('purchaseIdA') || pm.variables.get('purchaseId'))) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin la compra de A', () => pm.expect(b.compras.map(x => String(x.idCompra))).to.not.include(String((pm.variables.get('purchaseIdA') || pm.variables.get('purchaseId')))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/compras-cursos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "compras-cursos"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id}/materiales de una inscripción ajena (B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Nunca el enlace de Drive', () => { pm.expect(pm.response.text()).to.not.include('drive.google.com'); pm.expect(b && b.url).to.not.be.ok; });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/{{enrollmentId}}/materiales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "{{enrollmentId}}",
+                "materiales"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /cliente/mis-cursos/{id inexistente}/materiales (B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404 o 403', () => pm.expect([404,403]).to.include(pm.response.code));",
+                  "const b = (() => { try { return pm.response.json(); } catch (e) { return null; } })();",
+                  "pm.test('Sin enlace de Drive', () => pm.expect(pm.response.text()).to.not.include('drive.google.com'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cliente/mis-cursos/999999999/materiales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cliente",
+                "mis-cursos",
+                "999999999",
+                "materiales"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/logout (B)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenB}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mobile/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "mobile",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/mobile/logout (A, sesión de línea base)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenA2}}"
               }
             ],
             "url": {

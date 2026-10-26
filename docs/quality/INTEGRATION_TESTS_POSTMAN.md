@@ -15,6 +15,7 @@ Corrida del 2026-10-26 (UTC) con Postman CLI contra `https://cmp-site.vercel.app
 | 4. Mis cursos, materiales, progreso | Pasa | 3: lista, detalle (inscripción 6), materiales |
 | 5. Aislamiento (B) | Pasa | 5 ejecutadas: B no ve la inscripción; detalle y materiales de A con token de B → 404 sin enlace de Drive; A intacto. Las 2 de compras se omitieron (dependen de la carpeta 3) |
 | 6. Token inválido y cierre de sesión | Pasa | 9: sin token, basura, JWT `exp=1`, check-session, materiales, refresh inválido → 401; logout de A y B → 200; token revocado → 401 |
+| 7. Aislamiento extendido (#102) | **Pendiente de corrida real** (verificada solo contra un servidor simulado: 51 solicitudes y 112 aserciones en verde con compra y notificación sembradas; 41 y 90 con los casos opcionales omitidos). Requiere resembrar las cuentas | 12 solicitudes: perfil, notificaciones, compra y materiales de otra cuenta con el token de B |
 
 Persistencia en PostgreSQL (consulta de solo lectura por Neon, equivalente a `verify.sql`): A existe, rol 1, activa, inscripción 6 en el curso 2502 (`activo`) con 4/2 sesiones y `porcentaje_avance` 50.00, 0 compras; B existe, activa, sin inscripciones ni compras. Coincide con lo que devolvió la API.
 
@@ -31,6 +32,7 @@ No se ejecutó: carpeta 3 (compra y reporte de pago), `seed.sql` y `cleanup.sql`
 | 4. Mis cursos (A) | contrato de lista, inscripción sembrada presente, la reserva sin validar **no** crea inscripción, avance igual al sembrado, detalle coherente con la lista, materiales autorizados (estado válido, enlace solo de Drive HTTPS) |
 | 5. Aislamiento (B) | B no ve la inscripción de A en su lista; detalle y materiales de A con token de B → 404/403 sin filtrar el enlace de Drive; compras de A no visibles; A intacto |
 | 6. Token inválido | sin token, basura y JWT con `exp=1` → 401; `check-session` `ok:false`; refresh inválido → 401; logout de A y B y token revocado → 401 |
+| 7. Aislamiento extendido (B) | `GET /profile` con y sin `?id=<A>` devuelve a B; notificaciones de B sin las de A, con y sin `?usuarioId=<A>`; `PATCH …/leida` de una notificación de A → 404; compra de A (detalle y listado de B) → 404, solo si hay `purchaseIdA`; materiales de una inscripción ajena e inexistente → 404/403 sin enlace de Drive |
 
 La compra es opt-in porque reserva cupo del curso y escribe historial, movimientos de cupo y analítica (`movimientos_cupos_curso`, `historial_estados_compra`, dataset de analítica con FK `restrict`). Esas filas no se limpian automáticamente; ver Limpieza.
 
@@ -60,6 +62,10 @@ Variables: `CMP_BASE_URL` (por defecto la API de producción), `CMP_EMAIL_A/B`, 
 5. Limpieza: `psql "$DATABASE_URL" -f tests/postman/sql/cleanup.sql`. Borra progreso, inscripción y cuentas `qa-integracion-*@example.test`; las compras de `enablePurchase=true` solo se listan para revertirlas a mano (cupos y movimientos).
 
 Los datos por corrida son únicos (`runId` con marca de tiempo en participante, referencia y observaciones). Las cuentas A/B son fijas porque se siembran; repetir tras una corrección no requiere resembrar, salvo tras limpiar. El logout final revoca los tokens de ambas cuentas.
+
+### Siembra para la carpeta 7
+
+Variables opcionales: `purchaseIdA` (o `CMP_PURCHASE_ID_A`) y `notificationIdA` (`CMP_NOTIFICATION_ID_A`). Sin ellas, los casos de compra y del `PATCH` se omiten (no fallan). Con la siembra mínima (sin compra) corren 11 de las 12 solicitudes con aserciones útiles; la compra requiere sembrarla aparte. Qué sembrar en Neon: cuentas A y B (rol 1, activas), inscripción y avance de A en el curso 2502 (como `seed.sql`), al menos una notificación de A en estado visible ligada a esa inscripción y, para el caso de compras, una compra de A con su participante.
 
 ## CI
 
