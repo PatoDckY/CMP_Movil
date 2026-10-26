@@ -2,17 +2,23 @@
 
 Fecha: 2026-10-25. Colección: [`tests/postman/cmp-integration.postman_collection.json`](../../tests/postman/cmp-integration.postman_collection.json). Herramienta exigida por la Actividad 3 (automatización de pruebas) para integración: Postman CLI ejecutando una colección contra la API, con código de respuesta, estructura de datos y persistencia en PostgreSQL.
 
-## Estado honesto de la corrida
+## Resultado de la corrida real
 
-**No se ejecutó la corrida completa contra CMP_Site.** Se eligió producción con cuentas ficticias sembradas por SQL, pero crear cuentas y escribir filas en la base real queda fuera de lo que este agente hace por sí mismo. Por eso:
+Corrida del 2026-10-26 (UTC) con Postman CLI contra `https://cmp-site.vercel.app/api`, cuentas A y B sembradas, curso `2502`, `enablePurchase=false`. **30 solicitudes, 69 aserciones, 0 fallos** (11,2 s). Reportes locales: `tests/postman/results/report.html` y `junit.xml` (ignorados por Git).
 
-| Qué se hizo | Dónde | Resultado |
+| Carpeta | Resultado | Solicitudes con aserciones |
 |---|---|---|
-| Carpeta 0 (catálogo), 2 solicitudes de validación de registro y 6 casos de token inválido/sin token | Producción, solo lectura o rechazos sin efecto (newman, `courseId=2502`) | 21 aserciones, 19 en verde; las 2 fallidas eran un fallo del propio script (leía la variable equivocada), corregido y repetido: 8/8 en verde en el catálogo |
-| Colección completa (37 solicitudes, 85 aserciones) | Servidor simulado local con el contrato de `BACKEND_CONTRACTS.md` | 0 fallos. Valida la lógica de los scripts, **no** el backend real |
-| Seeds, verificación SQL, limpieza, workflow | — | Escritos, **sin ejecutar** |
+| 0. Catálogo público | Pasa | 2 (8 aserciones) |
+| 1. Registro (validaciones) | Pasa | 3: 400 sin correo, 409 con correo de A, 400 registro incompleto |
+| 2. Autenticación (A) | Pasa | 8: login inexistente 401, login A, check-session, profile, notificaciones, compras, refresh, check-session tras refresh |
+| 3. Compra | **Omitida** (opt-in, no se escribió en producción) | 0 |
+| 4. Mis cursos, materiales, progreso | Pasa | 3: lista, detalle (inscripción 6), materiales |
+| 5. Aislamiento (B) | Pasa | 5 ejecutadas: B no ve la inscripción; detalle y materiales de A con token de B → 404 sin enlace de Drive; A intacto. Las 2 de compras se omitieron (dependen de la carpeta 3) |
+| 6. Token inválido y cierre de sesión | Pasa | 9: sin token, basura, JWT `exp=1`, check-session, materiales, refresh inválido → 401; logout de A y B → 200; token revocado → 401 |
 
-El resultado real de los pasos autenticados (A, B, compra) queda pendiente de que alguien con acceso ejecute el procedimiento de abajo y anote aquí el resultado.
+Persistencia en PostgreSQL (consulta de solo lectura por Neon, equivalente a `verify.sql`): A existe, rol 1, activa, inscripción 6 en el curso 2502 (`activo`) con 4/2 sesiones y `porcentaje_avance` 50.00, 0 compras; B existe, activa, sin inscripciones ni compras. Coincide con lo que devolvió la API.
+
+No se ejecutó: carpeta 3 (compra y reporte de pago), `seed.sql` y `cleanup.sql` (las cuentas se sembraron aparte), ni el workflow de GitHub Actions. No quedaron datos nuevos de la colección que limpiar; el logout solo incrementó la versión de tokens de A y B.
 
 ## Qué cubre
 
@@ -61,7 +67,7 @@ Se añadió `.github/workflows/integration.yml`, **solo manual** (`workflow_disp
 
 ## Defectos encontrados
 
-Ninguno en la API: no se llegó a los pasos autenticados reales. Hallazgos de diseño de pruebas:
+Ninguno en la API en los casos ejecutados. Hallazgos de diseño de pruebas:
 
 - El registro no es automatizable de extremo a extremo: el OTP solo se envía por correo (almacén en memoria, ya no se escribe en logs). Se cubre con validaciones y cuentas sembradas.
 - Crear una compra no tiene un camino de reversión limpio: no hay endpoint de cancelación documentado y las FK `restrict` obligan a limpieza manual. Sin un entorno aislado, la compra debe ser opt-in. No alimenta #104 salvo que se decida exponer un entorno de pruebas.
@@ -71,16 +77,16 @@ Ninguno en la API: no se llegó a los pasos autenticados reales. Hallazgos de di
 
 | # | Criterio | Estado |
 |---|---|---|
-| 1 | Se prueban flujos que involucran más de un módulo | **Cubierto en la colección** (auth → catálogo → compras → Mis cursos → materiales); sin corrida real |
-| 2 | La autenticación se mantiene al navegar entre rutas protegidas | **Cubierto** (carpeta 2, mismo token en 4 módulos + refresh); sin corrida real |
-| 3 | La adquisición se refleja en Mis cursos | **Parcial**: la inscripción sembrada aparece y la reserva sin validar no genera inscripción; la validación de pago por administrador no es automatizable |
-| 4 | El acceso al contenido respeta la autorización | **Cubierto** (materiales con A autorizado; sin token y con B rechazados); sin corrida real |
-| 5 | El progreso se refleja donde corresponde | **Cubierto** (lista = detalle = valor sembrado en PostgreSQL); sin corrida real |
-| 6 | Los cambios de cuenta no afectan datos de otros usuarios | **Cubierto** (carpeta 5); sin corrida real |
-| 7 | Los errores quedan documentados | **Cumplido**: sección Defectos; sin defectos de API porque no hubo corrida real |
+| 1 | Se prueban flujos que involucran más de un módulo | **Cumplido** (auth → catálogo → Mis cursos → materiales, corrida real 0 fallos) |
+| 2 | La autenticación se mantiene al navegar entre rutas protegidas | **Cumplido** (mismo token en perfil, notificaciones, compras, Mis cursos, materiales; refresh; corrida real) |
+| 3 | La adquisición se refleja en Mis cursos | **Parcial**: la inscripción existente aparece con contrato correcto. Compra y reporte de pago no se ejecutaron (opt-in) y la validación por administrador no es automatizable |
+| 4 | El acceso al contenido respeta la autorización | **Cumplido** (A autorizado; sin token y con B rechazados; corrida real) |
+| 5 | El progreso se refleja donde corresponde | **Cumplido** (lista = detalle = 50 % en PostgreSQL) |
+| 6 | Los cambios de cuenta no afectan datos de otros usuarios | **Cumplido** en lectura de inscripción y materiales; las comprobaciones sobre compras de A quedaron omitidas junto con la carpeta 3 |
+| 7 | Los errores quedan documentados | **Cumplido**: la corrida real no encontró defectos de API |
 | 8 | Las pruebas pueden repetirse tras correcciones | **Cumplido**: comando único, datos por corrida, seed/cleanup, workflow manual |
-| 9 | Los resultados quedan como evidencia | **Parcial**: reportes JUnit/HTML y artefacto del workflow listos; la evidencia de la corrida real está pendiente |
+| 9 | Los resultados quedan como evidencia | **Cumplido**: reportes JUnit/HTML, tabla de arriba y verificación en PostgreSQL |
 
 ## Pendiente
 
-Ejecutar los pasos 1–5 y registrar aquí el resultado por caso. `seed.sql` y `cleanup.sql` se escribieron leyendo el esquema de CMP_Site y no se ejecutaron, ni siquiera en transacción con rollback: conviene revisarlos antes de correrlos en producción.
+Carpeta 3 (compra y reporte de pago): requiere un entorno aislado o aceptar la limpieza manual de cupos y movimientos en producción. Workflow de GitHub Actions sin ejecutar. Review cruzado de Luis.
