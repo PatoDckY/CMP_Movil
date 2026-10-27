@@ -1,0 +1,43 @@
+name: Pruebas de integración (Postman CLI)
+
+# Solo manual: necesita cuentas de prueba sembradas (tests/postman/sql/seed.sql) y escribe contra la API
+# configurada, por lo que no corre en cada PR. Secrets requeridos: CMP_IT_PASSWORD_A, CMP_IT_PASSWORD_B.
+# Variable de repositorio requerida: CMP_IT_COURSE_ID.
+on:
+  workflow_dispatch:
+    inputs:
+      enable_purchase:
+        description: 'Incluir compra y reporte de pago (escribe y reserva cupo)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: Colección Postman
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Obtener código del repositorio
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Instalar Postman CLI
+        run: curl -o- "https://dl-cli.pstmn.io/install/unix.sh" | sh
+      - name: Ejecutar colección
+        env:
+          CMP_PASSWORD_A: ${{ secrets.CMP_IT_PASSWORD_A }}
+          CMP_PASSWORD_B: ${{ secrets.CMP_IT_PASSWORD_B }}
+          CMP_COURSE_ID: ${{ vars.CMP_IT_COURSE_ID }}
+          CMP_ENABLE_PURCHASE: ${{ inputs.enable_purchase }}
+        run: sh tests/postman/run-integration.sh
+      - name: Conservar reportes
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: reportes-postman
+          path: tests/postman/results/
+          if-no-files-found: warn
+          retention-days: 14

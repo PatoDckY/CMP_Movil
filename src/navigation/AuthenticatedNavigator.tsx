@@ -1,0 +1,169 @@
+
+import React from 'react';
+import {AccountDeletionScreen} from '../screens/account/AccountDeletionScreen';
+import {NotificationsScreen} from '../screens/notifications/NotificationsScreen';
+import {ChangePasswordScreen} from '../screens/account/ChangePasswordScreen';
+import {LegalInformationScreen} from '../screens/account/LegalInformationScreen';
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
+
+import {
+  AccountScreen,
+} from '../screens/account/AccountScreen';
+
+import {
+  PersonalDataScreen,
+} from '../screens/account/PersonalDataScreen';
+
+import {
+  AuthenticatedCourseDetailScreen,
+} from '../screens/catalog/CourseDetailScreen';
+
+import {
+  CatalogScreen,
+} from '../screens/catalog/CatalogScreen';
+
+import {
+  DashboardScreen,
+} from '../screens/dashboard/DashboardScreen';
+
+import {
+  MyCoursesScreen,
+} from '../screens/myCourses/MyCoursesScreen';
+
+import {
+  MyCourseDetailScreen,
+} from '../screens/myCourses/MyCourseDetailScreen';
+
+import {
+  CreatePurchaseScreen,
+} from '../screens/purchases/CreatePurchaseScreen';
+
+import {
+  PurchaseDetailScreen,
+} from '../screens/purchases/PurchaseDetailScreen';
+
+import {
+  PurchaseHistoryScreen,
+} from '../screens/purchases/PurchaseHistoryScreen';
+
+import {
+  colors,
+} from '../theme/colors';
+
+import {
+  AuthenticatedStackParamList,
+} from './types';
+
+const Stack =
+  createNativeStackNavigator<AuthenticatedStackParamList>();
+
+export function AuthenticatedNavigator(): React.JSX.Element {
+  return (
+    <Stack.Navigator
+      initialRouteName="Home"
+      screenOptions={{
+        headerTintColor: colors.primary,
+        headerTitleStyle: {
+          fontWeight: '700',
+        },
+        headerShadowVisible: false,
+        contentStyle: {
+          backgroundColor: colors.background,
+        },
+      }}>
+      <Stack.Screen
+        name="Home"
+        component={DashboardScreen}
+        options={{
+          title: 'Inicio',
+        }}
+      />
+
+      <Stack.Screen
+        name="MyCourses"
+        component={MyCoursesScreen}
+        options={{
+          title: 'Mis cursos',
+        }}
+      />
+
+      <Stack.Screen
+        name="Catalog"
+        component={CatalogScreen}
+        options={{
+          title: 'Cursos',
+        }}
+      />
+
+      <Stack.Screen
+        name="CourseDetail"
+        component={AuthenticatedCourseDetailScreen}
+        options={{
+          title: 'Detalle del curso',
+        }}
+      />
+
+      <Stack.Screen
+        name="CreatePurchase"
+        component={CreatePurchaseScreen}
+        options={{
+          title: 'Comprar curso',
+        }}
+      />
+
+      <Stack.Screen
+        name="PurchaseHistory"
+        component={PurchaseHistoryScreen}
+        options={{
+          title: 'Historial de compras',
+        }}
+      />
+
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
+          title: 'Centro de notificaciones',
+        }}
+      />
+
+      <Stack.Screen
+        name="PurchaseDetail"
+        component={PurchaseDetailScreen}
+        options={{
+          title: 'Detalle de compra',
+        }}
+      />
+
+      <Stack.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{
+          title: 'Mi cuenta',
+        }}
+      />
+
+      <Stack.Screen
+        name="PersonalData"
+        component={PersonalDataScreen}
+        options={{
+          title: 'Mis datos personales',
+        }}
+      />
+
+      <Stack.Screen name="AccountDeletion" component={AccountDeletionScreen} options={{title: 'Solicitud de eliminación'}} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{title: 'Cambiar contraseña'}} />
+      <Stack.Screen name="LegalInformation" component={LegalInformationScreen} options={{title: 'Privacidad y términos'}} />
+
+      <Stack.Screen
+        name="MyCourseDetail"
+        component={MyCourseDetailScreen}
+        options={{
+          title: 'Detalle de mi curso',
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
