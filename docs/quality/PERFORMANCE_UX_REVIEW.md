@@ -59,5 +59,6 @@ Ninguna operación lenta deja una pantalla en blanco o congelada. En login y cre
 
 1. Agregar un spinner gráfico al botón de login y al de crear compra (cambio visual, se deja para el equipo de UX).
 2. Valorar `FlatList` para Historial y Mis cursos si el volumen por usuario crece.
-3. Medir en dispositivo real (Android de gama baja) el tiempo de primer render del catálogo; esta revisión es estática.
-4. Pruebas de esfuerzo (sección 4.7 del documento académico): fuera del alcance de #96 por decisión del proyecto. No se ejecutan contra producción real sin un ambiente aislado; no se abre issue nuevo.
+3. Revisar el tamaño de `GET /cursos` (unos 124 KB, 2.2 s promedio en JMeter, ver PERFORMANCE_BASELINE_JMETER.md): compresión y paginación en el backend.
+4. Medir en dispositivo real (Android de gama baja) el tiempo de primer render del catálogo; esta revisión es estática.
+5. Pruebas de esfuerzo (sección 4.7 del documento académico): fuera del alcance de #96 por decisión del proyecto. No se ejecutan contra producción real sin un ambiente aislado; no se abre issue nuevo.
