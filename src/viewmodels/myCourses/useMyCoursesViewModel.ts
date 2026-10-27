@@ -85,7 +85,14 @@ export function useMyCoursesViewModel(
         ++requestId.current;
 
       try {
-        setState('loading');
+        // Al volver a enfocar la pantalla se revalida en segundo
+        // plano: se conserva la lista visible en lugar de
+        // reemplazarla por un spinner a pantalla completa.
+        setState(current =>
+          current === 'success' || current === 'empty'
+            ? current
+            : 'loading',
+        );
         setError(null);
 
         const result =

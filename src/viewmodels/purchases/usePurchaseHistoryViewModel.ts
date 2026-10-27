@@ -55,7 +55,13 @@ export function usePurchaseHistoryViewModel(
       ++requestId.current;
 
     try {
-      setState('loading');
+      // Revalida en segundo plano: si ya hay historial visible se
+      // conserva en pantalla en vez de mostrar un spinner completo.
+      setState(current =>
+        current === 'success' || current === 'empty'
+          ? current
+          : 'loading',
+      );
       setError(null);
 
       const result =
